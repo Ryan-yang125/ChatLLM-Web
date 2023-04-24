@@ -10,4 +10,5 @@ export type ChatConversation = {
   messages: Message[];
   createTime: string;
   updateTime: string;
+  title: string;
 };

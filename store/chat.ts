@@ -26,12 +26,13 @@ function createEmptyConversation(): ChatConversation {
     messages: [],
     createTime: curTime,
     updateTime: curTime,
+    title: 'New Conversation',
   };
 }
 
 export interface ChatStore {
   conversations: ChatConversation[];
-  currentConversationIndex: number;
+  curConversationIndex: number;
   newConversation: () => void;
   delConversation: (index: number) => void;
   chooseConversation: (index: number) => void;
@@ -41,16 +42,56 @@ export interface ChatStore {
 export const useChatStore = create<ChatStore>()(
   persist(
     (set, get) => ({
-      currentConversationIndex: 0,
+      curConversationIndex: 0,
       conversations: [createEmptyConversation()],
-      newConversation() {},
-      delAllConversations() {},
-      chooseConversation(index) {},
-      delConversation(index) {},
+      newConversation() {
+        set((state) => {
+          return {
+            curConversationIndex: 0,
+            conversations: [createEmptyConversation()].concat(
+              state.conversations,
+            ),
+          };
+        });
+      },
+
+      delAllConversations() {
+        set({
+          curConversationIndex: 0,
+          conversations: [createEmptyConversation()],
+        });
+      },
+
+      chooseConversation(index) {
+        set({
+          curConversationIndex: index,
+        });
+      },
+
+      delConversation(index) {
+        set((state) => {
+          const { conversations, curConversationIndex } = state;
+
+          if (conversations.length === 1) {
+            return {
+              curConversationIndex: 0,
+              conversations: [createEmptyConversation()],
+            };
+          }
+          conversations.splice(index, 1);
+          return {
+            conversations,
+            curConversationIndex:
+              curConversationIndex >= index
+                ? curConversationIndex - 1
+                : curConversationIndex,
+          };
+        });
+      },
     }),
     {
       name: CHATSTORE_KEY,
-      version: 1,
+      version: 1.0,
     },
   ),
 );

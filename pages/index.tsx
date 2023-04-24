@@ -35,42 +35,40 @@ const Home = () => {
     setInputValue(event.target.value);
   };
   return (
-    <>
-      <Sidebar />
-      <div className="w-[100%] h-[800px] flex flex-col justify-center items-center">
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={handleClick}
-        >
-          Init
-        </button>
-        <div className="flex items-center my-4">
-          Input:
-          <input
-            className="border border-gray-400 py-2 px-4 rounded-l mx-4"
-            type="text"
-            value={inputValue}
-            onChange={handleChange}
-          />
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r"
-            onClick={handleInput}
-          >
-            Send
+    <div className="flex w-full h-[1296px]">
+      <div className="w-[20%]">
+        <Sidebar />
+      </div>
+      <div className="divider divider-horizontal"></div>
+      <div className="w-[80%]">
+        <div>
+          <button className="btn btn-secondary" onClick={handleClick}>
+            Init
           </button>
-        </div>
-        <div className="flex items-center my-4">
-          <div>Output:</div>
-
-          <input
-            className="border border-gray-400 py-2 px-4 rounded-l mx-4"
-            type="text"
-            value={outputValue}
-            readOnly
-          />
+          <div className="flex items-center my-4">
+            Input:
+            <input
+              className="input input-bordered input-primary w-full max-w-xs"
+              type="text"
+              value={inputValue}
+              onChange={handleChange}
+            />
+            <button className="btn btn-secondary" onClick={handleInput}>
+              Send
+            </button>
+          </div>
+          <div className="flex items-center my-4">
+            <div>Output:</div>
+            <input
+              className="input input-bordered input-primary w-full max-w-xs"
+              type="text"
+              value={outputValue}
+              readOnly
+            />
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
