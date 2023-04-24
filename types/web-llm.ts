@@ -1,3 +1,5 @@
+import { Message } from './chat';
+
 type Prompts = [string, string][];
 
 declare global {
@@ -19,28 +21,17 @@ declare global {
     response: string;
     sentencePieceProcessor: (url: string) => void;
   };
+  var importScripts: (...url: string[]) => void;
 }
 
-export type Engine = {
+export type LLMEngine = {
   chat: (
     message: string,
     userMessages: string[],
     generatedMessages: string[],
     allMessages: Message[],
   ) => Promise<string>;
-  classify: (text: string, categories: string[]) => Promise<string>;
   destroy?: () => void;
-  draw: (text: string) => Promise<Buffer | void>;
   greeting: Message;
-  imageToText: (name: string, type: string, image: Buffer) => Promise<string>;
   init: () => Promise<void>;
-  summarization: (text: string) => Promise<string>;
-  translation: (text: string) => Promise<string>;
-};
-export type Message = {
-  command?: string;
-  image?: string;
-  text: string;
-  type: 'assistant' | 'system' | 'user';
-  writing?: boolean;
 };

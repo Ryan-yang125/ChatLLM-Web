@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { WebLLM } from '@/hooks/WebLLM';
+import { WebLLM } from '@/hooks/web-llm';
 
 import { Sidebar } from '@/components/SideBar';
 
