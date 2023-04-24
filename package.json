@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "dev:local": "npm run dev && /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary --enable-dawn-features=disable_robustness",
     "format": "prettier --write ."
   },
   "dependencies": {

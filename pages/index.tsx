@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 
 import { WebLLM } from '@/hooks/WebLLM';
 
+import { Sidebar } from '@/components/SideBar';
+
 const Home = () => {
   const [inputValue, setInputValue] = useState('');
   const [outputValue, setOutputValue] = useState('');
@@ -34,6 +36,7 @@ const Home = () => {
   };
   return (
     <>
+      <Sidebar />
       <div className="w-[100%] h-[800px] flex flex-col justify-center items-center">
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -63,6 +66,7 @@ const Home = () => {
             className="border border-gray-400 py-2 px-4 rounded-l mx-4"
             type="text"
             value={outputValue}
+            readOnly
           />
         </div>
       </div>
