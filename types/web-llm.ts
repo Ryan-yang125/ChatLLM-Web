@@ -30,8 +30,8 @@ export type LLMEngine = {
     userMessages: string[],
     generatedMessages: string[],
     allMessages: Message[],
-  ) => Promise<string>;
+  ) => Promise<void>;
   destroy?: () => void;
-  greeting: Message;
-  init: () => Promise<void>;
+  greeting?: Message;
+  init: any;
 };

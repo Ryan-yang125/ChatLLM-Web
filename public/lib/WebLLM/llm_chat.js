@@ -514,7 +514,9 @@ class LLMChatInstance {
   updateLastMessage(kind, text) {
     if (kind == "init") {
       console.log(`[System Initalize] ${text}`);
+      globalThis.postMessage({type: "system", content: `[System Initalize] ${text}`})
     } else if (kind == "left") {
+      globalThis.postMessage({type: "assistant", content: text, isStreaming: true})
       globalThis.tvmjsGlobalEnv.response = text;
     }
   }

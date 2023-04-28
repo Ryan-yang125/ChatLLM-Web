@@ -1,4 +1,6 @@
-import { ChatConversation, Message } from '@/types/chat';
+import { WebLLMInstance } from '@/hooks/web-llm';
+
+import { ChatConversation, Message, UpdateBotMsg } from '@/types/chat';
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -37,6 +39,14 @@ export interface ChatStore {
   delConversation: (index: number) => void;
   chooseConversation: (index: number) => void;
   delAllConversations: () => void;
+  curConversation: () => ChatConversation;
+  onUserInputContent: (content: string) => Promise<void>;
+  getMemoryMsgs: () => Message[];
+  updateCurConversation: (
+    updater: (conversation: ChatConversation) => void,
+  ) => void;
+  initLLMModel: () => Promise<void>;
+  updateBotMsg: UpdateBotMsg;
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -82,10 +92,76 @@ export const useChatStore = create<ChatStore>()(
           return {
             conversations,
             curConversationIndex:
-              curConversationIndex >= index
+              curConversationIndex === index
                 ? curConversationIndex - 1
                 : curConversationIndex,
           };
+        });
+      },
+
+      curConversation() {
+        let index = get().curConversationIndex;
+        const conversations = get().conversations;
+
+        if (index < 0 || index >= conversations.length) {
+          index = Math.min(conversations.length - 1, Math.max(0, index));
+          set(() => ({ curConversationIndex: index }));
+        }
+
+        const conversation = conversations[index];
+
+        return conversation;
+      },
+
+      async onUserInputContent(content) {
+        const userMessage: Message = newMessage({
+          type: 'user',
+          content,
+        });
+
+        const aiBotMessage: Message = newMessage({
+          type: 'assistant',
+          content: 'thinking...',
+          isStreaming: true,
+        });
+
+        const recentMsgs = get().getMemoryMsgs();
+        const toSendMsgs = recentMsgs.concat(userMessage);
+        console.log('[User Input] ', userMessage);
+        // update
+        get().updateCurConversation((conversation) => {
+          conversation.messages.push(userMessage, aiBotMessage);
+        });
+        WebLLMInstance.chat(content);
+      },
+      getMemoryMsgs() {
+        const conversation = get().curConversation();
+        return conversation.messages.filter((msg) => !msg.isError);
+      },
+      updateCurConversation(updater) {
+        const conversations = get().conversations;
+        const index = get().curConversationIndex;
+        updater(conversations[index]);
+        set(() => ({ conversations }));
+      },
+      async initLLMModel() {
+        WebLLMInstance.init(get().updateBotMsg);
+      },
+      updateBotMsg(msg) {
+        const aiBotMessage: Message = newMessage({
+          type: 'assistant',
+          isStreaming: false,
+          ...msg,
+        });
+        get().updateCurConversation((conversation) => {
+          if (aiBotMessage.type === 'system') {
+            conversation.messages[0] = aiBotMessage;
+          } else if (msg.isStreaming) {
+            const aiMsgs = conversation.messages.filter(
+              (msg) => msg.type === 'assistant',
+            );
+            aiMsgs[aiMsgs.length - 1] = aiBotMessage;
+          }
         });
       },
     }),

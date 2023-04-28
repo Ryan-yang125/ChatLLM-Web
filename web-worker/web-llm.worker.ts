@@ -23,10 +23,13 @@ globalThis.addEventListener(
 
       globalThis.tvmjsGlobalEnv = globalThis.tvmjsGlobalEnv || {};
 
+      globalThis.tvmjsGlobalEnv.initialized = true;
+
       globalThis.importScripts(...libs);
 
       globalThis.tvmjsGlobalEnv.sentencePieceProcessor = (url: string) =>
         globalThis.sentencepiece.sentencePieceProcessor(url);
+      globalThis.tvmjsGlobalEnv.asyncOnGenerate();
     } else {
       runLLM(data).then(globalThis.postMessage);
     }

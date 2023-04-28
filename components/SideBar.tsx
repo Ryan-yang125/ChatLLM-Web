@@ -1,5 +1,9 @@
 import React from 'react';
 
+import { Settings } from './Settings';
+
+import { useChatStore } from '@/store/chat';
+
 export const ChatItem = (props: {
   onClick?: () => void;
   title: string;
@@ -12,9 +16,9 @@ export const ChatItem = (props: {
     <li key={props.index} onClick={props.onClick} className="my-2">
       <a className={props.isActive ? 'active' : ''}>
         <div className="flex flex-col h-full w-full">
-          <div>{props.title}</div>
-          <div className="flex justify-between h-full">
-            <div>{props.messageCount}</div>
+          <div className="">{props.title}</div>
+          <div className="flex justify-between h-full menu-title">
+            <div>Messages: {props.messageCount}</div>
             <div>{props.timeText}</div>
           </div>
         </div>
@@ -23,13 +27,11 @@ export const ChatItem = (props: {
   );
 };
 const Sidebar = () => {
-  const mockChatItems = new Array(8).fill(-1).map((t, index) => ({
-    title: 'New Conversation',
-    index,
-    messageCount: 21,
-    isActive: index === 2,
-    timeText: '2021-02-12 21:30',
-  }));
+  const [conversations, curConversationIndex] = useChatStore((state) => [
+    state.conversations,
+    state.curConversationIndex,
+  ]);
+  const chatStore = useChatStore();
   return (
     <>
       <div className="z-20 bg-base-200 bg-opacity-90 backdrop-blur sticky top-0 items-center gap-2 px-4 py-2">
@@ -66,18 +68,23 @@ const Sidebar = () => {
           </div>
         </div>
       </div>
-      <ul className="menu menu-compact flex flex-col p-0 px-4">
-        {mockChatItems.map((item, i) => (
-          <ChatItem
-            index={i}
-            title={item.title}
-            messageCount={item.messageCount}
-            isActive={item.isActive}
-            timeText={item.timeText}
-          />
-        ))}
-      </ul>
-      <div></div>
+      <div className="h-[80%] max-h-[81%] overflow-scroll">
+        <ul className="menu menu-compact menu-vertical flex flex-col p-0 px-4">
+          {conversations.map((item, i) => (
+            <ChatItem
+              index={i}
+              title={item.title}
+              messageCount={item.messages.length}
+              isActive={i === curConversationIndex}
+              timeText={item.updateTime}
+              onClick={() => chatStore.chooseConversation(i)}
+            />
+          ))}
+        </ul>
+      </div>
+      <div className="p-0 px-4 mt-8">
+        <Settings />
+      </div>
     </>
   );
 };
