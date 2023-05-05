@@ -20,18 +20,25 @@ declare global {
     prompts: Prompts;
     response: string;
     sentencePieceProcessor: (url: string) => void;
+    covId: number;
+    messages: Partial<Message>[];
   };
   var importScripts: (...url: string[]) => void;
 }
 
 export type LLMEngine = {
-  chat: (
-    message: string,
-    userMessages: string[],
-    generatedMessages: string[],
-    allMessages: Message[],
-  ) => Promise<void>;
+  chat: (message: string, updateBotMsg?: any) => Promise<void>;
   destroy?: () => void;
   greeting?: Message;
   init: any;
+};
+
+export type PostToWorker = {
+  type: 'init' | 'chat';
+  msg: string;
+};
+
+export type ListenFromWorker = {
+  type: 'init' | 'chat';
+  msg: string;
 };

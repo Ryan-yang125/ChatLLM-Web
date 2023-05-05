@@ -89,6 +89,7 @@ class Conversation {
 
   reset() {
     this.messages = [];
+    this.covId = null
   }
 
   getStopStr() {
@@ -98,12 +99,17 @@ class Conversation {
   appendMessage(role, message) {
     this.messages.push([role, message]);
   }
+  
+  switchConversation(message) {
+    this.messages = message
+    this.covId = globalThis.tvmjsGlobalEnv.covId
+  }
 }
 
 function defaultConversation(maxWindowLength = 2048) {
   return new Conversation({
     system: "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.",
-    roles: ["USER", "ASSISTANT"],
+    roles: ["user", "assistant"],
     maxWindowLength: maxWindowLength,
     messages: [],
     offset: 0,
@@ -287,6 +293,8 @@ class LLMChatPipeline {
   }
 
   async generate(inputPrompt, callbackUpdateResponse) {
+    // switch to new Conversation
+    if (this.conversation.convId !== globalThis.tvmjsGlobalEnv.covId) {}
     this.conversation.appendMessage(this.conversation.roles[0], inputPrompt);
     this.conversation.appendMessage(this.conversation.roles[1], "");
     const stopStr = this.conversation.getStopStr();
@@ -514,7 +522,7 @@ class LLMChatInstance {
   updateLastMessage(kind, text) {
     if (kind == "init") {
       console.log(`[System Initalize] ${text}`);
-      globalThis.postMessage({type: "system", content: `[System Initalize] ${text}`})
+      globalThis.postMessage({type: "init", content: `[System Initalize] ${text}`})
     } else if (kind == "left") {
       globalThis.postMessage({type: "assistant", content: text, isStreaming: true})
       globalThis.tvmjsGlobalEnv.response = text;
@@ -572,8 +580,7 @@ class LLMChatInstance {
       return;
     }
 
-    this.appendMessage("right", prompt);
-    this.appendMessage("placeholder", "Generating...");
+
     const callbackUpdateResponse = (step, msg) => {
       if (msg.endsWith("##")) {
         msg = msg.substring(0, msg.length - 2);

@@ -1,4 +1,4 @@
-import { Message, UpdateBotMsg } from '@/types/chat';
+import { Message, UpdateBotMsg, UpdateInitMsg } from '@/types/chat';
 import { LLMEngine } from '@/types/web-llm';
 
 import { newMessage } from '@/store/chat';
@@ -13,7 +13,7 @@ class WebLLM implements LLMEngine {
     this.worker?.terminate();
   }
 
-  public async init(updateBotMsg: UpdateBotMsg): Promise<void> {
+  public async init(updateInitMsg: UpdateInitMsg): Promise<void> {
     this.worker = new Worker(
       new URL('web-worker/web-llm.worker.ts', import.meta.url),
       { name: 'WebLLM' },
@@ -22,18 +22,18 @@ class WebLLM implements LLMEngine {
     this.worker.postMessage('init');
     this.worker.onmessage = function (e) {
       // console.log(e.data);
-      updateBotMsg(e.data);
+      const msg = e.data as Partial<Message>;
+      if (msg.type === 'init') {
+        updateInitMsg(e.data);
+      } else if (msg.type === 'assistant') {
+      }
     };
     return Promise.resolve();
   }
 
-  public async chat(
-    message: string,
-    _userMessages?: string[],
-    _generatedMessages?: string[],
-    _allMessages?: Message[],
-  ): Promise<void> {
-    requestAnimationFrame(() => this.worker?.postMessage(message));
+  public async chat(message: string): Promise<void> {
+    this.worker?.postMessage(message);
+    // requestAnimationFrame(() => this.worker?.postMessage(message));
 
     // return new Promise((resolve) => {
     //   this.worker?.addEventListener('message', ({ data }: { data: string }) =>

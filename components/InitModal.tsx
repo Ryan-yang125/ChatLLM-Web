@@ -1,5 +1,7 @@
 import React from 'react';
 
+import Link from 'next/link';
+
 import { useChatStore } from '@/store/chat';
 
 export function InitModal() {
@@ -9,16 +11,13 @@ export function InitModal() {
   const chatStore = useChatStore();
   return (
     <>
-      {/* <label htmlFor="init-modal" className="btn">open modal</label> */}
-      {/* <input type="checkbox" id="init-modal" className="modal-toggle" /> */}
       <div className={`modal ${instructionModalStatus ? 'modal-open' : ''}`}>
         <div className="modal-box w-11/12 max-w-5xl">
-          {/* <label htmlFor="init-modal" className="btn btn-sm btn-circle absolute right-2 top-2">✕</label> */}
           <h3 className="font-bold text-lg">Instructions</h3>
           <p className="py-4">
-            <a href="https://github.com/mlc-ai/web-llm" target="_blank">
+            <Link href="https://github.com/mlc-ai/web-llm" target="_blank">
               WebLLM
-            </a>{' '}
+            </Link>{' '}
             brings language model chats directly onto web browsers. Everything
             runs inside the browser with no server support and accelerated with
             WebGPU. For more details, check in{' '}

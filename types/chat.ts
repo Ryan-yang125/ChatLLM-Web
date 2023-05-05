@@ -1,6 +1,6 @@
 export type Message = {
   content: string;
-  type: 'assistant' | 'system' | 'user';
+  type: 'assistant' | 'system' | 'user' | 'init';
   createTime: string;
   id: number;
   isStreaming?: boolean;
@@ -17,3 +17,5 @@ export type ChatConversation = {
 };
 
 export type UpdateBotMsg = (msg: Partial<Message>) => void;
+
+export type UpdateInitMsg = (msg: Partial<Message>) => void;
