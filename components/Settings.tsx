@@ -12,6 +12,12 @@ export function Settings() {
       >
         Add
       </button>
+      <button
+        onClick={() => chatStore.toggleInstuctionModal(true)}
+        className="btn btn-outline btn-xs"
+      >
+        Instruction
+      </button>
     </div>
   );
 }

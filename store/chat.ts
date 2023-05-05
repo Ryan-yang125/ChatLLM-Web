@@ -35,6 +35,7 @@ function createEmptyConversation(): ChatConversation {
 export interface ChatStore {
   conversations: ChatConversation[];
   curConversationIndex: number;
+  instructionModalStatus: boolean;
   newConversation: () => void;
   delConversation: (index: number) => void;
   chooseConversation: (index: number) => void;
@@ -47,6 +48,7 @@ export interface ChatStore {
   ) => void;
   initLLMModel: () => Promise<void>;
   updateBotMsg: UpdateBotMsg;
+  toggleInstuctionModal: (toggle: boolean) => void;
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -54,6 +56,7 @@ export const useChatStore = create<ChatStore>()(
     (set, get) => ({
       curConversationIndex: 0,
       conversations: [createEmptyConversation()],
+      instructionModalStatus: true,
       newConversation() {
         set((state) => {
           return {
@@ -162,6 +165,11 @@ export const useChatStore = create<ChatStore>()(
             );
             aiMsgs[aiMsgs.length - 1] = aiBotMessage;
           }
+        });
+      },
+      toggleInstuctionModal(toggle) {
+        set({
+          instructionModalStatus: toggle,
         });
       },
     }),
