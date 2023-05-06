@@ -1,6 +1,15 @@
 import { WebLLMInstance } from '@/hooks/web-llm';
 
-import { ChatConversation, Message, UpdateBotMsg } from '@/types/chat';
+import {
+  ChatConversation,
+  InitInfo,
+  Message,
+  UpdateBotMsg,
+} from '@/types/chat';
+import {
+  ResFromWorkerMessageEventData,
+  SendToWorkerMessageEventData,
+} from '@/types/web-llm';
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -36,6 +45,7 @@ export interface ChatStore {
   conversations: ChatConversation[];
   curConversationIndex: number;
   instructionModalStatus: boolean;
+  initInfoTmp: InitInfo;
   newConversation: () => void;
   delConversation: (index: number) => void;
   chooseConversation: (index: number) => void;
@@ -46,9 +56,10 @@ export interface ChatStore {
   updateCurConversation: (
     updater: (conversation: ChatConversation) => void,
   ) => void;
-  initLLMModel: () => Promise<void>;
-  updateBotMsg: UpdateBotMsg;
   toggleInstuctionModal: (toggle: boolean) => void;
+  toggleInitModal: (toggle: boolean) => void;
+  workerMessageCb: (data: ResFromWorkerMessageEventData) => void;
+  setWorkerConversationHistroy: () => void;
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -57,6 +68,10 @@ export const useChatStore = create<ChatStore>()(
       curConversationIndex: 0,
       conversations: [createEmptyConversation()],
       instructionModalStatus: true,
+      initInfoTmp: {
+        showModal: false,
+        initMsg: [],
+      },
       newConversation() {
         set((state) => {
           return {
@@ -66,6 +81,7 @@ export const useChatStore = create<ChatStore>()(
             ),
           };
         });
+        get().setWorkerConversationHistroy();
       },
 
       delAllConversations() {
@@ -73,12 +89,14 @@ export const useChatStore = create<ChatStore>()(
           curConversationIndex: 0,
           conversations: [createEmptyConversation()],
         });
+        WebLLMInstance.destroy();
       },
 
       chooseConversation(index) {
         set({
           curConversationIndex: index,
         });
+        get().setWorkerConversationHistroy();
       },
 
       delConversation(index) {
@@ -100,6 +118,7 @@ export const useChatStore = create<ChatStore>()(
                 : curConversationIndex,
           };
         });
+        get().setWorkerConversationHistroy();
       },
 
       curConversation() {
@@ -116,26 +135,80 @@ export const useChatStore = create<ChatStore>()(
         return conversation;
       },
 
+      setWorkerConversationHistroy() {
+        console.log('1');
+
+        WebLLMInstance.setConversationHistroy({
+          ifNewConverstaion: true,
+          workerHistoryMsg: get()
+            .curConversation()
+            .messages.map((msg) => [msg.type, msg.content]),
+          curConversationIndex: get().curConversationIndex,
+          msg: '',
+        });
+      },
+
       async onUserInputContent(content) {
         const userMessage: Message = newMessage({
           type: 'user',
           content,
         });
 
-        const aiBotMessage: Message = newMessage({
-          type: 'assistant',
-          content: 'thinking...',
-          isStreaming: true,
-        });
+        // const recentMsgs = get().getMemoryMsgs();
+        // const toSendMsgs = recentMsgs.concat(userMessage);
 
-        const recentMsgs = get().getMemoryMsgs();
-        const toSendMsgs = recentMsgs.concat(userMessage);
         console.log('[User Input] ', userMessage);
         // update
         get().updateCurConversation((conversation) => {
-          conversation.messages.push(userMessage, aiBotMessage);
+          conversation.messages.push(userMessage);
         });
-        WebLLMInstance.chat(content);
+        WebLLMInstance.chat(
+          {
+            msg: content,
+            curConversationIndex: get().curConversationIndex,
+          },
+          get().workerMessageCb,
+        );
+      },
+      workerMessageCb(data) {
+        if (data.type === 'initing') {
+          const initMsg = get().initInfoTmp.initMsg;
+          if (data.action === 'append') {
+            const appendMsg = newMessage({
+              type: 'init',
+              content: data.msg,
+              isError: !!data.ifError,
+            });
+            initMsg.push(appendMsg);
+          } else if (data.action === 'updateLast') {
+            initMsg[initMsg.length - 1].content = data.msg;
+            initMsg[initMsg.length - 1].isError = !!data.ifError;
+          }
+          set({
+            initInfoTmp: {
+              initMsg,
+              showModal: true,
+            },
+          });
+        } else if (data.type === 'chatting') {
+          const msgs = get().curConversation().messages;
+          if (msgs[msgs.length - 1].type !== 'assistant') {
+            const aiBotMessage: Message = newMessage({
+              type: 'assistant',
+              content: '',
+              isStreaming: true,
+            });
+            get().updateCurConversation((conversation) => {
+              conversation.messages.push(aiBotMessage);
+            });
+          }
+
+          get().updateCurConversation((conversation) => {
+            const msgs = conversation.messages;
+            msgs[msgs.length - 1].content = data.msg;
+            msgs[msgs.length - 1].isError = !!data.ifError;
+          });
+        }
       },
       getMemoryMsgs() {
         const conversation = get().curConversation();
@@ -147,35 +220,29 @@ export const useChatStore = create<ChatStore>()(
         updater(conversations[index]);
         set(() => ({ conversations }));
       },
-      async initLLMModel() {
-        WebLLMInstance.init(get().updateBotMsg);
-      },
-      updateBotMsg(msg) {
-        const aiBotMessage: Message = newMessage({
-          type: 'assistant',
-          isStreaming: false,
-          ...msg,
-        });
-        get().updateCurConversation((conversation) => {
-          if (aiBotMessage.type === 'system') {
-            conversation.messages[0] = aiBotMessage;
-          } else if (msg.isStreaming) {
-            const aiMsgs = conversation.messages.filter(
-              (msg) => msg.type === 'assistant',
-            );
-            aiMsgs[aiMsgs.length - 1] = aiBotMessage;
-          }
-        });
-      },
       toggleInstuctionModal(toggle) {
         set({
           instructionModalStatus: toggle,
+        });
+      },
+      toggleInitModal(toggle) {
+        set({
+          initInfoTmp: {
+            showModal: toggle,
+            initMsg: [],
+          },
         });
       },
     }),
     {
       name: CHATSTORE_KEY,
       version: 1.0,
+      partialize: (state) =>
+        Object.fromEntries(
+          Object.entries(state).filter(
+            ([key]) => !['initInfoTmp'].includes(key),
+          ),
+        ),
     },
   ),
 );

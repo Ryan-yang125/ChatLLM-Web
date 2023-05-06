@@ -1,6 +1,7 @@
 import { Message } from './chat';
 
 type Prompts = [string, string][];
+type WorkerHistoryMsg = [string, string][];
 
 declare global {
   var Tokenizer: {
@@ -13,15 +14,12 @@ declare global {
   var tvmjsGlobalEnv: {
     asyncOnGenerate: () => Promise<void>;
     asyncOnReset: () => Promise<void>;
-    canvas: HTMLCanvasElement;
     getTokenizer: (name: string) => Promise<unknown>;
     initialized: boolean;
-    message: string;
-    prompts: Prompts;
-    response: string;
     sentencePieceProcessor: (url: string) => void;
-    covId: number;
-    messages: Partial<Message>[];
+    message: string;
+    curConversationIndex: number;
+    workerHistoryMsg: WorkerHistoryMsg;
   };
   var importScripts: (...url: string[]) => void;
 }
@@ -41,4 +39,18 @@ export type PostToWorker = {
 export type ListenFromWorker = {
   type: 'init' | 'chat';
   msg: string;
+};
+
+export type SendToWorkerMessageEventData = {
+  curConversationIndex: number;
+  msg: string;
+  workerHistoryMsg?: WorkerHistoryMsg;
+  ifNewConverstaion?: boolean;
+};
+
+export type ResFromWorkerMessageEventData = {
+  type: 'initing' | 'chatting';
+  action: 'append' | 'updateLast';
+  msg: string;
+  ifError?: boolean;
 };

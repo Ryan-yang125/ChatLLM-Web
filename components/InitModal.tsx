@@ -4,10 +4,54 @@ import Link from 'next/link';
 
 import { useChatStore } from '@/store/chat';
 
+function InitItem(props: { content: string; isError: boolean }) {
+  return (
+    <>
+      <li className={`py-1 ${props.isError ? 'text-error' : ''}`}>
+        {props.content}
+      </li>
+    </>
+  );
+}
 export function InitModal() {
+  const [initInfoTmp] = useChatStore((state) => [state.initInfoTmp]);
+
+  const chatStore = useChatStore();
+  return (
+    <>
+      <div className={`modal ${initInfoTmp.showModal ? 'modal-open' : ''}`}>
+        <div className="modal-box w-11/12 max-w-5xl">
+          <h3 className="font-bold text-lg">Loading Model...</h3>
+          <p className="py-4">we need do some init stuff:</p>
+          <ul>
+            {initInfoTmp.initMsg.map((msg) => (
+              <InitItem
+                content={msg.content}
+                isError={!!msg.isError}
+                key={msg.id}
+              />
+            ))}
+          </ul>
+          <div className="modal-action">
+            <label
+              htmlFor="init-modal"
+              className="btn"
+              onClick={() => chatStore.toggleInitModal(false)}
+            >
+              Okay
+            </label>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export function InstructionModal() {
   const [instructionModalStatus] = useChatStore((state) => [
     state.instructionModalStatus,
   ]);
+
   const chatStore = useChatStore();
   return (
     <>

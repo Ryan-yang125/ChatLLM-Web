@@ -17,11 +17,9 @@ export function ChatConversation(props: {
         </div>
       </div>
       <div className="chat-header">
-        {props.type === 'user' ? 'Me' : 'AI asssitant'}
-        <time className="text-xs opacity-50">{props.timeText}</time>
+        <time className="text-xs opacity-50 mx-2">{props.timeText}</time>
       </div>
       <div className="chat-bubble">{props.content}</div>
-      <div className="chat-footer opacity-50">Delivered</div>
     </div>
   );
 }
@@ -41,24 +39,29 @@ export function ChatBox() {
             条对话
           </div>
         </div>
-        <div className="flex">
-          <button
-            onClick={() => chatStore.initLLMModel()}
-            className="btn btn-outline btn-xs mx-4"
-          >
-            Init
-          </button>
+        <div className="flex justify-between">
           <button
             onClick={() => chatStore.delConversation(curConversationIndex)}
-            className="btn btn-outline btn-xs"
+            className="btn btn-outline btn-xs mx-4"
           >
             Delete
+          </button>
+          <button
+            onClick={() =>
+              chatStore.updateCurConversation((conversation) => {
+                conversation.title = 'haha';
+              })
+            }
+            className="btn btn-outline btn-xs"
+          >
+            Rename
           </button>
         </div>
       </div>
       <div className="h-full overflow-scroll border-b-slate-100 py-4">
         {chatStore.curConversation()?.messages.map((item) => (
           <ChatConversation
+            key={item.id}
             content={item.content}
             type={item.type}
             timeText={item.createTime}

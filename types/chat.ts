@@ -19,3 +19,8 @@ export type ChatConversation = {
 export type UpdateBotMsg = (msg: Partial<Message>) => void;
 
 export type UpdateInitMsg = (msg: Partial<Message>) => void;
+
+export type InitInfo = {
+  showModal: boolean;
+  initMsg: Message[];
+};

@@ -8,7 +8,6 @@ class Conversation {
     this.offset = config.offset;
     this.seps = config.seps;
     this.convId = null;
-    this.messages = [];
     this.contextWindowStart = 0;
   }
 
@@ -23,8 +22,8 @@ class Conversation {
     }
     let ret = [this.system + this.seps[0]];
 
-    for (let i = 0; i < this.messages.length; ++i) {
-      const item = this.messages[i];
+    for (let i = 0; i < tvmjsGlobalEnv.workerHistoryMsg.length; ++i) {
+      const item = tvmjsGlobalEnv.workerHistoryMsg[i];
       const role = item[0];
       const message = item[1];
       if (message !== undefined && message != "") {
@@ -45,12 +44,12 @@ class Conversation {
     if (this.seps.length == 0) {
       throw Error("Need seps to work")
     }
-    if (this.messages.length < 3) {
+    if (tvmjsGlobalEnv.workerHistoryMsg.length < 3) {
       throw Error("needs to call getLastPromptArray for the first message");
     }
     let ret = [this.seps[this.seps.length - 1]];
-    for (let i = this.messages.length - 2; i < this.messages.length; ++i) {
-      const item = this.messages[i];
+    for (let i = tvmjsGlobalEnv.workerHistoryMsg.length - 2; i < tvmjsGlobalEnv.workerHistoryMsg.length; ++i) {
+      const item = tvmjsGlobalEnv.workerHistoryMsg[i];
       const role = item[0];
       const message = item[1];
       if (message !== undefined && message != "") {
@@ -74,8 +73,8 @@ class Conversation {
     }
     let ret = [this.system + this.seps[0]];
 
-    for (let i = this.messages.length - 2; i < this.messages.length; ++i) {
-      const item = this.messages[i];
+    for (let i = tvmjsGlobalEnv.workerHistoryMsg.length - 2; i < tvmjsGlobalEnv.workerHistoryMsg.length; ++i) {
+      const item = tvmjsGlobalEnv.workerHistoryMsg[i];
       const role = item[0];
       const message = item[1];
       if (message !== undefined && message != "") {
@@ -88,7 +87,7 @@ class Conversation {
   }
 
   reset() {
-    this.messages = [];
+    tvmjsGlobalEnv.workerHistoryMsg = [];
     this.covId = null
   }
 
@@ -97,12 +96,12 @@ class Conversation {
   }
 
   appendMessage(role, message) {
-    this.messages.push([role, message]);
+    tvmjsGlobalEnv.workerHistoryMsg.push([role, message]);
   }
   
   switchConversation(message) {
-    this.messages = message
-    this.covId = globalThis.tvmjsGlobalEnv.covId
+    tvmjsGlobalEnv.workerHistoryMsg = message
+    this.covId = tvmjsGlobalEnv.covId
   }
 }
 
@@ -111,7 +110,6 @@ function defaultConversation(maxWindowLength = 2048) {
     system: "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.",
     roles: ["user", "assistant"],
     maxWindowLength: maxWindowLength,
-    messages: [],
     offset: 0,
     seps: [" ", "</s>"],
   });
@@ -229,7 +227,7 @@ class LLMChatPipeline {
   async getInputTokens() {
     let tokens = [this.bosTokenId];
     let prompts = ""
-    if (this.conversation.messages.length <= 2) {
+    if (tvmjsGlobalEnv.workerHistoryMsg.length <= 2) {
       prompts = this.conversation.getPromptArray();
     } else {
       tokens.pop();
@@ -294,7 +292,7 @@ class LLMChatPipeline {
 
   async generate(inputPrompt, callbackUpdateResponse) {
     // switch to new Conversation
-    if (this.conversation.convId !== globalThis.tvmjsGlobalEnv.covId) {}
+    if (this.conversation.convId !== tvmjsGlobalEnv.covId) {}
     this.conversation.appendMessage(this.conversation.roles[0], inputPrompt);
     this.conversation.appendMessage(this.conversation.roles[1], "");
     const stopStr = this.conversation.getStopStr();
@@ -356,7 +354,7 @@ class LLMChatPipeline {
       }
     }
     this.kvCacheLength += tokens.length - 1;
-    this.conversation.messages[this.conversation.messages.length - 1][1] = outputPrompt;
+    tvmjsGlobalEnv.workerHistoryMsg[tvmjsGlobalEnv.workerHistoryMsg.length - 1][1] = outputPrompt;
     return outputPrompt;
   }
 
@@ -512,21 +510,32 @@ class LLMChatInstance {
     this.updateLastMessage("init", "All initialization finished.");
   }
 
+  //init info or error
   appendMessage(kind, text) {
     if (kind == "init") {
       text = "[System Initalize] " + text;
     }
     console.log(`[${kind}] ${text}`);
+    globalThis.postMessage({
+      type: 'initing',
+      action: 'append',
+      msg: text,
+      ifError: kind == 'error'
+    })
   }
 
   updateLastMessage(kind, text) {
+    let type = 'chatting';
     if (kind == "init") {
-      console.log(`[System Initalize] ${text}`);
-      globalThis.postMessage({type: "init", content: `[System Initalize] ${text}`})
-    } else if (kind == "left") {
-      globalThis.postMessage({type: "assistant", content: text, isStreaming: true})
-      globalThis.tvmjsGlobalEnv.response = text;
+      text = `[System Initalize] ${text}`
+      type = 'initing'
     }
+    console.log(text);
+    globalThis.postMessage({
+      type,
+      action: 'updateLast',
+      msg: text,
+    })
   }
 
   async respondTestMessage(repeat) {
@@ -574,12 +583,11 @@ class LLMChatInstance {
       return;
     }
 
-    const prompt = globalThis.tvmjsGlobalEnv.message;
+    const prompt = tvmjsGlobalEnv.message;
     if (prompt == "") {
       this.requestInProgress = false;
       return;
     }
-
 
     const callbackUpdateResponse = (step, msg) => {
       if (msg.endsWith("##")) {

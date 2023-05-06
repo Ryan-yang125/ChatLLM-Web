@@ -1,40 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 
 import { ChatBox } from '@/components/ChatBox';
 import { ChatInput } from '@/components/ChatInput';
-import { InitModal } from '@/components/InitModal';
+import { InitModal, InstructionModal } from '@/components/InitModal';
 import { Sidebar } from '@/components/SideBar';
 
-const Home = () => {
-  const [inputValue, setInputValue] = useState('');
-  const [outputValue, setOutputValue] = useState('');
-  // const [LLM, setLLM] = useState(new WebLLM());
-  // const handleClick = async () => {
-  //   console.log('startInit');
-  //   try {
-  //     await LLM.init();
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
-  // const handleInput = () => {
-  //   // 在这里执行输入框的逻辑
-  //   console.log(inputValue);
-  //   try {
-  //     LLM.chat(inputValue, [], []).then((gM) => {
-  //       if (gM) {
-  //         console.log(gM);
-  //         setOutputValue(gM);
-  //       }
-  //     });
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
+import { useChatStore } from '@/store/chat';
 
-  const handleChange = (event: any) => {
-    setInputValue(event.target.value);
-  };
+const Home = () => {
+  const [setWorkerConversationHistroy] = useChatStore((state) => [
+    state.setWorkerConversationHistroy,
+  ]);
+  useEffect(() => {
+    setWorkerConversationHistroy();
+  }, []);
   return (
     <>
       <div className="bg-base-100 drawer drawer-mobile">
@@ -57,6 +36,7 @@ const Home = () => {
         </div>
       </div>
       <InitModal />
+      <InstructionModal />
     </>
   );
 };

@@ -72,6 +72,7 @@ const Sidebar = () => {
         <ul className="menu menu-compact menu-vertical flex flex-col p-0 px-4">
           {conversations.map((item, i) => (
             <ChatItem
+              key={item.id}
               index={i}
               title={item.title}
               messageCount={item.messages.length}
