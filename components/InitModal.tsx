@@ -61,14 +61,13 @@ export function InstructionModal() {
           <p className="py-4">
             <Link href="https://github.com/mlc-ai/web-llm" target="_blank">
               WebLLM
-            </Link>{' '}
+            </Link>
             brings language model chats directly onto web browsers. Everything
             runs inside the browser with no server support and accelerated with
             WebGPU. For more details, check in{' '}
             <a href="https://github.com/mlc-ai/web-llm" target="_blank">
               WebLLM
-            </a>{' '}
-            .
+            </a>
           </p>
           <p className="">Here are some instructions about this app: </p>
           <ul>

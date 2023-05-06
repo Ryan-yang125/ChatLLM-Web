@@ -1,5 +1,7 @@
 import React from 'react';
 
+import Image from 'next/image';
+
 import { useChatStore } from '@/store/chat';
 
 export function ChatConversation(props: {
@@ -13,7 +15,7 @@ export function ChatConversation(props: {
     >
       <div className="chat-image avatar">
         <div className="w-10 rounded-full">
-          <img src="aiBot.jpg" />
+          <Image src="aiBot.jpg" alt="" />
         </div>
       </div>
       <div className="chat-header">

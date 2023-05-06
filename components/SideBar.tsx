@@ -1,5 +1,7 @@
 import React from 'react';
 
+import Link from 'next/link';
+
 import { Settings } from './Settings';
 
 import { useChatStore } from '@/store/chat';
@@ -35,7 +37,7 @@ const Sidebar = () => {
   return (
     <>
       <div className="z-20 bg-base-200 bg-opacity-90 backdrop-blur sticky top-0 items-center gap-2 px-4 py-2">
-        <a
+        <Link
           href="/"
           aria-current="page"
           aria-label="Homepage"
@@ -45,7 +47,7 @@ const Sidebar = () => {
             <span className="uppercase">Chat-LLM</span>
             <span className="text-base-content uppercase">-Web</span>
           </div>
-        </a>
+        </Link>
         <div data-tip="theme" className="tooltip tooltip-bottom">
           <div>
             <label className="swap swap-rotate">
