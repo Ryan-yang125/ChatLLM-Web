@@ -28,13 +28,6 @@ const ChatBox = dynamic(
   },
 );
 
-const ChatInput = dynamic(
-  async () => (await import('../components/ChatInput')).ChatInput,
-  {
-    loading: () => <Loading />,
-  },
-);
-
 const useHasHydrated = () => {
   const [hasHydrated, setHasHydrated] = useState<boolean>(false);
 
@@ -63,12 +56,7 @@ function Home() {
         <input id="my-drawer" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content p-2">
           {/* <label htmlFor="my-drawer" className="btn btn-primary drawer-button">Open drawer</label> */}
-          <div className="h-[80%]">
-            <ChatBox />
-          </div>
-          <div className="h-[20%]">
-            <ChatInput />
-          </div>
+          <ChatBox />
         </div>
         <div className="drawer-side">
           <label htmlFor="my-drawer" className="drawer-overlay"></label>

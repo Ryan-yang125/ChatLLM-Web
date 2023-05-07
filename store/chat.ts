@@ -1,15 +1,7 @@
 import { WebLLMInstance } from '@/hooks/web-llm';
 
-import {
-  ChatConversation,
-  InitInfo,
-  Message,
-  UpdateBotMsg,
-} from '@/types/chat';
-import {
-  ResFromWorkerMessageEventData,
-  SendToWorkerMessageEventData,
-} from '@/types/web-llm';
+import { ChatConversation, InitInfo, Message } from '@/types/chat';
+import { ResFromWorkerMessageEventData } from '@/types/web-llm';
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -46,6 +38,7 @@ export interface ChatStore {
   curConversationIndex: number;
   instructionModalStatus: boolean;
   initInfoTmp: InitInfo;
+  debugMode: boolean;
   newConversation: () => void;
   delConversation: (index: number) => void;
   chooseConversation: (index: number) => void;
@@ -68,6 +61,7 @@ export const useChatStore = create<ChatStore>()(
       curConversationIndex: 0,
       conversations: [createEmptyConversation()],
       instructionModalStatus: true,
+      debugMode: process.env.NODE_ENV === 'development',
       initInfoTmp: {
         showModal: false,
         initMsg: [],
@@ -162,6 +156,29 @@ export const useChatStore = create<ChatStore>()(
         get().updateCurConversation((conversation) => {
           conversation.messages.push(userMessage);
         });
+        if (get().debugMode) {
+          setTimeout(() => {
+            const msgs = get().curConversation().messages;
+            if (msgs[msgs.length - 1].type !== 'assistant') {
+              const aiBotMessage: Message = newMessage({
+                type: 'assistant',
+                content: '',
+                isStreaming: true,
+              });
+              get().updateCurConversation((conversation) => {
+                conversation.messages.push(aiBotMessage);
+              });
+            }
+
+            get().updateCurConversation((conversation) => {
+              const msgs = conversation.messages;
+              msgs[msgs.length - 1].content = 'yeyeye';
+              msgs[msgs.length - 1].isError = false;
+            });
+          }, 1000);
+
+          return;
+        }
         WebLLMInstance.chat(
           {
             msg: content,

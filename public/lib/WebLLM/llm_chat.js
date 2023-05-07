@@ -107,7 +107,7 @@ class Conversation {
 
 function defaultConversation(maxWindowLength = 2048) {
   return new Conversation({
-    system: "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.",
+    system: "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. Follow the user's instructions carefully. Respond using markdown.",
     roles: ["user", "assistant"],
     maxWindowLength: maxWindowLength,
     offset: 0,

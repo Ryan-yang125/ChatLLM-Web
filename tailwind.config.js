@@ -14,10 +14,10 @@ module.exports = {
   //     },
   //   },
   // },
-  plugins: [require('daisyui')],
+  plugins: [require('@tailwindcss/typography'), require('daisyui')],
   daisyui: {
     styled: true,
-    themes: ['dracula', 'dracula'],
+    themes: ['dracula'],
     base: true,
     utils: true,
     logs: true,

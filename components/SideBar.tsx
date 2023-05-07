@@ -21,7 +21,7 @@ export const ChatItem = (props: {
           <div className="">{props.title}</div>
           <div className="flex justify-between h-full menu-title">
             <div>Messages: {props.messageCount}</div>
-            <div>{props.timeText}</div>
+            <div className="ml-2">{props.timeText}</div>
           </div>
         </div>
       </a>
