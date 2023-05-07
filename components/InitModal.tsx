@@ -71,17 +71,18 @@ export function InstructionModal() {
           </p>
           <p className="">Here are some instructions about this app: </p>
           <ul>
+            <li className="py-1">1. We use model Vicuna-7b.</li>
             <li className="py-1">
-              1. Using browser supports WebGPU, you can try out Chrome 113 or
+              2. Using browser supports WebGPU, you can try out Chrome 113 or
               Chrome Canary. Chrome version ≤ 112 is not supported.
             </li>
             <li className="py-1">
-              2. First init requires download model, for vicuna-7b-v1.1, it
+              3. First init requires download model, for vicuna-7b-v1.1, it
               abouts 4GB. After downloading once, we can load modol from browser
               cache for next time usage, it's faster.
             </li>
             <li className="py-1">
-              3. You will need a gpu with about 6.4G memory. If lower than that,
+              4. You will need a gpu with about 6.4G memory. If lower than that,
               it's ok to run, but slow to wait for response.
             </li>
           </ul>
