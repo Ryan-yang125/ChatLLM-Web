@@ -116,7 +116,7 @@ export function ChatBox() {
             </button>
           </div>
         </div>
-        <div className="h-full overflow-scroll border-b-slate-100 py-4">
+        <div className="h-full overflow-auto border-b-slate-100 py-4">
           {chatStore.curConversation()?.messages.map((item, i) => (
             <div
               key={i}

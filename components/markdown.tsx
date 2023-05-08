@@ -63,26 +63,23 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
   };
   return (
     <div className="codeblock relative font-sans text-[16px]">
-      <div className="flex items-center justify-between py-1.5 px-4">
+      <div className="flex items-center justify-between py-2">
         <span className="text-xs lowercase text-white">{language}</span>
 
         <div className="flex items-center">
-          <button
-            className="flex gap-1.5 items-center rounded bg-none p-1 text-xs text-white"
-            onClick={copyToClipboard}
-          >
+          <button className="btn btn-ghost btn-xs" onClick={copyToClipboard}>
             {isCopied ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke-width="1.5"
+                strokeWidth={1.5}
                 stroke="currentColor"
                 className="w-6 h-6"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   d="M4.5 12.75l6 6 9-13.5"
                 />
               </svg>
@@ -98,16 +95,12 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"
+                  d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"
                 />
               </svg>
             )}
-            {isCopied ? 'Copied!' : 'Copy code'}
           </button>
-          <button
-            className="flex items-center rounded bg-none p-1 text-xs text-white"
-            onClick={downloadAsFile}
-          >
+          <button className="btn btn-ghost btn-xs" onClick={downloadAsFile}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -119,7 +112,7 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15M9 12l3 3m0 0l3-3m-3 3V2.25"
+                d="M7.5 7.5h-.75A2.25 2.25 0 004.5 9.75v7.5a2.25 2.25 0 002.25 2.25h7.5a2.25 2.25 0 002.25-2.25v-7.5a2.25 2.25 0 00-2.25-2.25h-.75m-6 3.75l3 3m0 0l3-3m-3 3V1.5m6 9h.75a2.25 2.25 0 012.25 2.25v7.5a2.25 2.25 0 01-2.25 2.25h-7.5a2.25 2.25 0 01-2.25-2.25v-.75"
               />
             </svg>
           </button>

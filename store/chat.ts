@@ -1,5 +1,7 @@
 import { WebLLMInstance } from '@/hooks/web-llm';
 
+import { testMdStr } from '@/utils/codeblock';
+
 import { ChatConversation, InitInfo, Message } from '@/types/chat';
 import { ResFromWorkerMessageEventData } from '@/types/web-llm';
 
@@ -172,7 +174,7 @@ export const useChatStore = create<ChatStore>()(
 
             get().updateCurConversation((conversation) => {
               const msgs = conversation.messages;
-              msgs[msgs.length - 1].content = 'yeyeye';
+              msgs[msgs.length - 1].content = testMdStr;
               msgs[msgs.length - 1].isError = false;
             });
           }, 1000);

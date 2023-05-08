@@ -30,6 +30,7 @@ globalThis.addEventListener(
       data.curConversationIndex || 0;
 
     if (data.ifNewConverstaion) {
+      globalThis.tvmjsGlobalEnv.asyncOnReset();
       globalThis.tvmjsGlobalEnv.workerHistoryMsg = data.workerHistoryMsg || [];
       globalThis.tvmjsGlobalEnv.curConversationIndex =
         data.curConversationIndex || 0;
