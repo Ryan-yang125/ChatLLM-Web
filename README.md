@@ -5,11 +5,12 @@
 
 <!-- English / [简体中文](./README_CN.md) -->
 
-🗣️ Chat with LLM like Vicuna totally in your browser with WebGPU, safely, privately, and with no server.
+🗣️ Chat with LLM like Vicuna totally in your browser with WebGPU, safely, privately, and with no server. Powered By [web-llm](https://github.com/mlc-ai/web-llm).
 
-Powered By [web-llm](https://github.com/mlc-ai/web-llm).
+[Try it now](https://chat-llm-web.vercel.app)
 
-<!-- ![cover](./docs/images/cover.png) -->
+![cover](./docs/images/cover.png)
+
 </div>
 
 ## Features
@@ -67,8 +68,8 @@ npm run dev
 
 ![Home](./docs/images/home.png)
 
-<!-- ![More](./docs/images/more.png) -->
+![More](./docs/images/mobile.png)
 
 ## LICENSE
 
-[Anti 996 License](https://github.com/kattgu7/Anti-996-License/blob/master/LICENSE_CN_EN)
+[MIT](./LICENSE)
