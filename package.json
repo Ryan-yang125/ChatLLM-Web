@@ -1,7 +1,14 @@
 {
-  "name": "web-llm-next",
-  "version": "0.1.0",
-  "private": true,
+  "name": "chat-llm-web",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Chat with LLM totally in your browser with WebGPU, safely, privately, and with no server.",
+  "author": {
+    "name": "Ryan-yang125",
+    "email": "ruiyang0012@gmail.com",
+    "url": "https://github.com/Ryan-yang125"
+  },
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

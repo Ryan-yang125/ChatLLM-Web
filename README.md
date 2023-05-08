@@ -22,9 +22,9 @@ Powered By [web-llm](https://github.com/mlc-ai/web-llm).
 
 - 💬 Multi-conversation chat, with all data stored locally in the browser for privacy.
 
-- 📝 Markdown response support: math, code highlighting, etc.
+- 📝 Markdown and streaming response support: math, code highlighting, etc.
 
-- 🎨 esponsive and well-designed UI, including dark mode.
+- 🎨 responsive and well-designed UI, including dark mode.
 
 ## Instructions
 
@@ -45,6 +45,9 @@ Powered By [web-llm](https://github.com/mlc-ai/web-llm).
 - [] Models: Support for more models is planned.
 
 - [] Desktop: Build a desktop version with Tauri, which will use system cache (not just browser cache) and run locally and offline.
+
+- [] Package: rewrite the logic of web-llm in TS and pack it into a npm package.
+- [] UI: Dark and Light Theme.
 
 ## Deploy to Vercel
 
