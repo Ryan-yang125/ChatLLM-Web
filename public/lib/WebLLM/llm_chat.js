@@ -283,7 +283,9 @@ class LLMChatPipeline {
   }
 
   resetChat() {
-    this.conversation.reset();
+    if (this.conversation) {
+      this.conversation.reset();
+    }
     this.#clearKVCache();
     this.decodingTotalTime = 0;
     this.encodingTotalTime = 0;
@@ -471,7 +473,7 @@ class LLMChatInstance {
     }
     this.tvm = tvm;
     const initProgressCallback = (report) => {
-      this.updateLastMessage("init", report.text);
+      this.updateLastMessage("initing", report.text);
     }
     tvm.registerInitProgressCallback(initProgressCallback);
 
@@ -508,12 +510,11 @@ class LLMChatInstance {
       return new LLMChatPipeline(this.tvm, tokenizer, this.tvm.cacheMetadata, this.config);
     });
     await this.pipeline.asyncLoadWebGPUPiplines();
-    this.updateLastMessage("init", "All initialization finished.");
+    this.appendMessage("initing", "All initialization finished.", true);
   }
 
-  //init info or error
-  appendMessage(kind, text) {
-    if (kind == "init") {
+  appendMessage(kind, text, ifFinish) {
+    if (kind == "initing") {
       text = "[System Initalize] " + text;
     }
     console.log(`[${kind}] ${text}`);
@@ -521,21 +522,20 @@ class LLMChatInstance {
       type: 'initing',
       action: 'append',
       msg: text,
-      ifError: kind == 'error'
+      ifError: kind == 'error',
+      ifFinish: !!ifFinish
     })
   }
 
-  updateLastMessage(kind, text) {
-    let type = 'chatting';
-    if (kind == "init") {
+  updateLastMessage(type, text, ifFinish) {
+    if (type == "initing") {
       text = `[System Initalize] ${text}`
-      type = 'initing'
     }
-    console.log(text);
     globalThis.postMessage({
       type,
       action: 'updateLast',
       msg: text,
+      ifFinish: !!ifFinish
     })
   }
 
@@ -548,14 +548,16 @@ class LLMChatInstance {
       for (let i = 0; i < encodedResult.length; ++i) {
         currentIds.push(encodedResult[i]);
         const msg = this.pipeline.tokenizer.decodeIds(currentIds);
-        this.updateLastMessage("left", msg);
+        this.updateLastMessage("chatting", msg);
         await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
   }
 
   resetChat() {
-    this.pipeline.resetChat();
+    if (this.pipeline) {
+      this.pipeline.resetChat();
+    }
   }
 
   /**
@@ -596,11 +598,12 @@ class LLMChatInstance {
       } else if (msg.endsWith("#")) {
         msg = msg.substring(0, msg.length - 1);
       }
-      this.updateLastMessage("left", msg);
+      this.updateLastMessage("chatting", msg);
     };
     try {
       const output = await this.pipeline.generate(prompt, callbackUpdateResponse);
-      this.updateLastMessage("left", output);
+      this.updateLastMessage("chatting", output, true);
+      this.updateLastMessage("stats",this.pipeline.runtimeStatsText())
       console.log(this.pipeline.runtimeStatsText());
     } catch (err) {
       this.appendMessage("error", "Generate error, " + err.toString());

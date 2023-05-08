@@ -13,6 +13,7 @@ const CHATSTORE_KEY = 'chat-web-llm-store';
 export const newMessage = (p: Partial<Message>): Message => ({
   id: Date.now(),
   createTime: new Date().toLocaleString(),
+  updateTime: new Date().toLocaleString(),
   type: 'user',
   content: '',
   ...p,
@@ -132,8 +133,6 @@ export const useChatStore = create<ChatStore>()(
       },
 
       setWorkerConversationHistroy() {
-        console.log('1');
-
         WebLLMInstance.setConversationHistroy({
           ifNewConverstaion: true,
           workerHistoryMsg: get()
@@ -150,37 +149,32 @@ export const useChatStore = create<ChatStore>()(
           content,
         });
 
+        const botMessage: Message = newMessage({
+          type: 'assistant',
+          content: '',
+          isLoading: true,
+        });
         // const recentMsgs = get().getMemoryMsgs();
         // const toSendMsgs = recentMsgs.concat(userMessage);
 
         console.log('[User Input] ', userMessage);
         // update
         get().updateCurConversation((conversation) => {
-          conversation.messages.push(userMessage);
+          conversation.messages.push(userMessage, botMessage);
         });
-        if (get().debugMode) {
-          setTimeout(() => {
-            const msgs = get().curConversation().messages;
-            if (msgs[msgs.length - 1].type !== 'assistant') {
-              const aiBotMessage: Message = newMessage({
-                type: 'assistant',
-                content: '',
-                isStreaming: true,
-              });
-              get().updateCurConversation((conversation) => {
-                conversation.messages.push(aiBotMessage);
-              });
-            }
+        // if (get().debugMode) {
+        //   setTimeout(() => {
+        //     get().updateCurConversation((conversation) => {
+        //       const msgs = conversation.messages;
+        //       msgs[msgs.length - 1].content = testMdStr;
+        //       msgs[msgs.length - 1].isError = false;
+        //       msgs[msgs.length - 1].isLoading = false;
+        //       msgs[msgs.length - 1].isStreaming = true;
+        //     });
+        //   }, 3000);
+        //   return;
+        // }
 
-            get().updateCurConversation((conversation) => {
-              const msgs = conversation.messages;
-              msgs[msgs.length - 1].content = testMdStr;
-              msgs[msgs.length - 1].isError = false;
-            });
-          }, 1000);
-
-          return;
-        }
         WebLLMInstance.chat(
           {
             msg: content,
@@ -209,6 +203,14 @@ export const useChatStore = create<ChatStore>()(
               showModal: true,
             },
           });
+          if (data.ifFinish) {
+            set({
+              initInfoTmp: {
+                showModal: false,
+                initMsg: get().initInfoTmp.initMsg,
+              },
+            });
+          }
         } else if (data.type === 'chatting') {
           const msgs = get().curConversation().messages;
           if (msgs[msgs.length - 1].type !== 'assistant') {
@@ -226,6 +228,16 @@ export const useChatStore = create<ChatStore>()(
             const msgs = conversation.messages;
             msgs[msgs.length - 1].content = data.msg;
             msgs[msgs.length - 1].isError = !!data.ifError;
+            msgs[msgs.length - 1].isLoading = false;
+            if (data.ifFinish) {
+              msgs[msgs.length - 1].isStreaming = false;
+              msgs[msgs.length - 1].updateTime = new Date().toLocaleString();
+            }
+          });
+        } else if (data.type === 'stats') {
+          get().updateCurConversation((conversation) => {
+            const msgs = conversation.messages;
+            msgs[msgs.length - 1].statsText = data.msg;
           });
         }
       },

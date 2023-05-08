@@ -135,13 +135,13 @@ export function Markdown(
     message: Message;
     loading?: boolean;
     fontSize?: number;
-    parentRef: RefObject<HTMLDivElement>;
+    parentRef?: RefObject<HTMLDivElement>;
     defaultShow?: boolean;
   } & React.DOMAttributes<HTMLDivElement>,
 ) {
   return (
     <MemoizedReactMarkdown
-      className="prose dark:prose-invert flex-1"
+      className="prose dark:prose-invert flex-1 chat-markdown"
       remarkPlugins={[remarkGfm, remarkMath]}
       rehypePlugins={[rehypeMathjax]}
       components={{

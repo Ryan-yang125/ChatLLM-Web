@@ -21,8 +21,16 @@ export function InitModal() {
     <>
       <div className={`modal ${initInfoTmp.showModal ? 'modal-open' : ''}`}>
         <div className="modal-box w-11/12 max-w-5xl">
+          {initInfoTmp.initMsg.findIndex((msg) => msg.isError) !== -1 && (
+            <label
+              htmlFor="my-modal-3"
+              className="btn btn-sm btn-circle absolute right-2 top-2"
+              onClick={() => chatStore.toggleInitModal(false)}
+            >
+              ✕
+            </label>
+          )}
           <h3 className="font-bold text-lg">Loading Model...</h3>
-          <p className="py-4">we need do some init stuff:</p>
           <ul>
             {initInfoTmp.initMsg.map((msg) => (
               <InitItem
@@ -32,15 +40,6 @@ export function InitModal() {
               />
             ))}
           </ul>
-          <div className="modal-action">
-            <label
-              htmlFor="init-modal"
-              className="btn"
-              onClick={() => chatStore.toggleInitModal(false)}
-            >
-              Okay
-            </label>
-          </div>
         </div>
       </div>
     </>

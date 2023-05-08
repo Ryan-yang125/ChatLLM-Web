@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.chat-markdown > pre {
+  margin: 0px !important;
+  padding: 0px !important;
+}

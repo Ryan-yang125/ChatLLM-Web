@@ -31,11 +31,11 @@ globalThis.addEventListener(
 
     if (data.ifNewConverstaion) {
       globalThis.tvmjsGlobalEnv.asyncOnReset();
+      globalThis.tvmjsGlobalEnv.workerHistoryMsg = [];
       globalThis.tvmjsGlobalEnv.workerHistoryMsg = data.workerHistoryMsg || [];
       globalThis.tvmjsGlobalEnv.curConversationIndex =
         data.curConversationIndex || 0;
       console.log('switch to new conversation: ', data.curConversationIndex);
-      console.log('set new history msgs: ', data.workerHistoryMsg);
       return;
     }
 

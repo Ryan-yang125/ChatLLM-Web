@@ -49,8 +49,9 @@ export type SendToWorkerMessageEventData = {
 };
 
 export type ResFromWorkerMessageEventData = {
-  type: 'initing' | 'chatting';
+  type: 'initing' | 'chatting' | 'stats';
   action: 'append' | 'updateLast';
   msg: string;
   ifError?: boolean;
+  ifFinish?: boolean;
 };

@@ -6,6 +6,9 @@ export type Message = {
   isStreaming?: boolean;
   isError?: boolean;
   isInit?: boolean;
+  isLoading?: boolean;
+  updateTime?: string;
+  statsText?: string;
 };
 
 export type ChatConversation = {

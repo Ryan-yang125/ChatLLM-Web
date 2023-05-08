@@ -50,13 +50,13 @@ export function ChatBox() {
     if (userInput.length <= 0) return;
     chatStore.onUserInputContent(userInput);
     setUserInput('');
-    setAutoScroll(true);
     scrollToBottom();
+    setAutoScroll(true);
   };
   return (
     <>
       <div className="top-0 p-2 flex flex-col relative max-h-[100vh] h-[100vh]">
-        <div className="w-full px-4 flex justify-between items-center py-2">
+        <div className="w-full px-4 flex justify-between items-center py-2 border-b border-solid border-black border-opacity-10">
           <div className="transition-all duration-200">
             <div className="my-1 text-xl font-bold overflow-hidden text-ellipsis whitespace-nowrap block max-w-[50vw]">
               {chatStore.curConversation()?.title ?? ''}
@@ -116,7 +116,10 @@ export function ChatBox() {
             </button>
           </div>
         </div>
-        <div className="h-full overflow-auto border-b-slate-100 py-4">
+        <div
+          className="h-full overflow-auto  py-4 border-b border-solid border-black border-opacity-10"
+          ref={scrollRef}
+        >
           {chatStore.curConversation()?.messages.map((item, i) => (
             <div
               key={i}
@@ -138,17 +141,19 @@ export function ChatBox() {
               </div>
               <div className="chat-header">
                 <time className="text-xs opacity-50 mx-2">
-                  {item.createTime}
+                  {item.updateTime}
                 </time>
               </div>
               <div className="chat-bubble">
-                <Markdown
-                  message={item}
-                  parentRef={scrollRef}
-                  fontSize={14}
-                  defaultShow={true}
-                />
+                {item.isLoading ? (
+                  <Loading />
+                ) : item.type === 'assistant' ? (
+                  <Markdown message={item} fontSize={14} defaultShow={true} />
+                ) : (
+                  <div>{item.content}</div>
+                )}
               </div>
+              <div className="chat-footer opacity-50">{item.statsText}</div>
             </div>
           ))}
         </div>

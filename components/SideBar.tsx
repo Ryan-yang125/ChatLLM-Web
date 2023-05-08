@@ -50,7 +50,7 @@ const Sidebar = () => {
           AI assitant running in browser.
         </div>
       </div>
-      <div className="overflow-auto flex-1 overflow-x-hidden">
+      <div className="overflow-auto flex-1 overflow-x-hidden ">
         <ul className="menu menu-compact menu-vertical flex flex-col p-0 px-4">
           {conversations.map((item, i) => (
             <ChatItem

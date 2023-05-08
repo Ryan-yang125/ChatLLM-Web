@@ -10,7 +10,13 @@ import { useChatStore } from '@/store/chat';
 export function Loading() {
   return (
     <div className="flex flex-col justify-center items-center h-full w-full">
-      <Image src="loading.svg" alt="" width={30} height={14} />
+      <Image
+        src="loading.svg"
+        alt=""
+        width={30}
+        height={14}
+        className="invert-[0.5]"
+      />
     </div>
   );
 }
