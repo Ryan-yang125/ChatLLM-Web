@@ -3,7 +3,7 @@
 
 <h1 align="center">ChatLLM Web</h1>
 
-<!-- English / [简体中文](./README_CN.md) -->
+English / [简体中文](./docs/README_CN.md)
 
 🗣️ Chat with LLM like Vicuna totally in your browser with WebGPU, safely, privately, and with no server. Powered By [web-llm](https://github.com/mlc-ai/web-llm).
 
@@ -17,9 +17,11 @@
 
 - 🤖 Everything runs inside the browser with **no server support** and is **accelerated with WebGPU**.
 
-- 💾 Model caching is supported, so you only need to download the model once.
+- ⚙️ Model runs in a web worker, ensuring that it doesn't block the user interface and providing a seamless experience.
 
 - 🚀 Easy to deploy for free with one-click on Vercel in under 1 minute, then you get your own ChatLLM Web.
+
+- 💾 Model caching is supported, so you only need to download the model once.
 
 - 💬 Multi-conversation chat, with all data stored locally in the browser for privacy.
 
@@ -33,7 +35,7 @@
 
 - 💻 You will need a GPU with about 6.4GB of memory. If your GPU has less memory, the app will still run, but the response time will be slower.
 
-- 📥 The first time you use the app, you will need to download the model. For the Vicuna-7b-v1.1 model that we are currently using, the download size is about 4GB. After the initial download, the model will be loaded from the browser cache for faster usage.
+- 📥 The first time you use the app, you will need to download the model. For the Vicuna-7b model that we are currently using, the download size is about 4GB. After the initial download, the model will be loaded from the browser cache for faster usage.
 
 - ℹ️ For more details, please visit [mlc.ai/web-llm](https://mlc.ai/web-llm/)
 
@@ -43,11 +45,8 @@
 
 - [✅] Conversations: Multi-conversation support is available.
 
-- [] Models: Support for more models is planned.
-
 - [] Desktop: Build a desktop version with Tauri, which will use system cache (not just browser cache) and run locally and offline.
 
-- [] Package: rewrite the logic of web-llm in TS and pack it into a npm package.
 - [] UI: Dark and Light Theme.
 
 ## Deploy to Vercel
