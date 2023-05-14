@@ -59,6 +59,7 @@ English / [简体中文](./docs/README_CN.md)
 
 ```shell
 git clone https://github.com/Ryan-yang125/ChatLLM-Web.git
+cd ChatLLM-Web
 npm i
 npm run dev
 ```
