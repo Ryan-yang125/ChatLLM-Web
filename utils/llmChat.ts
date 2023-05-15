@@ -361,7 +361,7 @@ class LLMChatInstance {
       new EmccWASI(),
       this.logger,
     );
-    // intialize WebGPU
+    // initialize WebGPU
     try {
       const output = await tvmjs.detectGPUDevice();
       if (output !== undefined) {
