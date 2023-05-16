@@ -12,6 +12,7 @@ declare global {
     sentencePieceProcessor: (url: string) => void;
   };
   var tvmjsGlobalEnv: {
+    covId: any;
     asyncOnGenerate: () => Promise<void>;
     asyncOnReset: () => Promise<void>;
     getTokenizer: (name: string) => Promise<unknown>;
@@ -21,6 +22,8 @@ declare global {
     curConversationIndex: number;
     workerHistoryMsg: WorkerHistoryMsg;
   };
+  var tvmjs: any;
+  var EmccWASI: any;
   var importScripts: (...url: string[]) => void;
 }
 
