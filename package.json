@@ -15,7 +15,8 @@
     "start": "next start",
     "lint": "next lint",
     "dev:local": "npm run dev && /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary --enable-dawn-features=disable_robustness",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "export": "next export"
   },
   "dependencies": {
     "@types/node": "18.16.0",
