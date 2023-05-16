@@ -27,6 +27,8 @@
     "daisyui": "^2.51.5",
     "eslint": "8.39.0",
     "eslint-config-next": "13.3.1",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
     "next": "13.3.1",
     "postcss": "8.4.23",
     "react": "18.2.0",
@@ -46,6 +48,7 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.9",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/file-saver": "^2.0.5",
     "@types/react-syntax-highlighter": "^15.5.6",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
