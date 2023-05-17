@@ -34,6 +34,11 @@ function useScrollToBottom() {
   };
 }
 
+const shouldSubmit = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key !== 'Enter') return false;
+  if (e.key === 'Enter' && e.nativeEvent.isComposing) return false;
+  return e.ctrlKey;
+};
 export function ChatBox() {
   const [userInput, setUserInput] = useState('');
 
@@ -53,6 +58,13 @@ export function ChatBox() {
     scrollToBottom();
     setAutoScroll(true);
   };
+
+  const onInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (shouldSubmit(e)) {
+      submitUserInput();
+    }
+  };
+
   return (
     <>
       <div className="top-0 p-2 flex flex-col relative max-h-[100vh] h-[100vh]">
@@ -161,11 +173,12 @@ export function ChatBox() {
           <div className="bg-base-100 flex items-center justify-center h-full z-30">
             <textarea
               className="textarea textarea-primary textarea-bordered textarea-sm w-[50%]"
-              placeholder="Ask me anything"
+              placeholder="Ctrl + Enter to Send. Ask me anything"
               value={userInput}
               onInput={(e) => onInput(e.currentTarget.value)}
               onFocus={() => setAutoScroll(true)}
               onBlur={() => setAutoScroll(false)}
+              onKeyDown={onInputKeyDown}
             ></textarea>
             <button
               onClick={submitUserInput}
