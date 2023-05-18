@@ -29,6 +29,8 @@ English / [简体中文](./docs/README_CN.md)
 
 - 🎨 responsive and well-designed UI, including dark mode.
 
+- 💻 PWA supported, download it and run totally offline.
+
 ## Instructions
 
 - 🌐 To use this app, you need a browser that supports WebGPU, such as Chrome 113 or Chrome Canary. Chrome versions ≤ 112 are not supported.
