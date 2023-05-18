@@ -63,7 +63,8 @@ export const ChatItem = (props: {
     </li>
   );
 };
-const Sidebar = () => {
+
+export const Sidebar = () => {
   const [conversations, curConversationIndex] = useChatStore((state) => [
     state.conversations,
     state.curConversationIndex,
@@ -105,5 +106,3 @@ const Sidebar = () => {
     </div>
   );
 };
-
-export { Sidebar };

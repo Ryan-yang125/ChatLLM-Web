@@ -1,5 +1,8 @@
 // /** @type {import('next').NextConfig} */
-const nextConfig = {
+const withPWA = require('next-pwa')({
+  dest: 'public',
+});
+module.exports = withPWA({
   webpack(config, { isServer, dev }) {
     config.experiments = {
       asyncWebAssembly: true,
@@ -10,5 +13,4 @@ const nextConfig = {
 
     return config;
   },
-};
-module.exports = nextConfig;
+});
