@@ -3,8 +3,9 @@
   "short_name": "ChatLLM-Web",
   "theme_color": "#1976d2",
   "background_color": "#fafafa",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait",
+  "display_override": ["window-controls-overlay"],
   "scope": "/",
   "start_url": "/",
   "icons": [
