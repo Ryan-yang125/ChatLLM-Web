@@ -47,9 +47,17 @@ English / [简体中文](./docs/README_CN.md)
 
 - [✅] Conversations: Multi-conversation support is available.
 
-- [] Desktop: Build a desktop version with Tauri, which will use system cache (not just browser cache) and run locally and offline.
+- [✅] PWA
 
-- [] UI: Dark and Light Theme.
+- [] Settings: 
+   - ui: dark/light theme
+   - device: 
+      - gpu device choose
+      - cache usage and manage
+   - model: 
+      - support multi models: vicuna-7b✅ RedPajama-INCITE-Chat-3B []
+      - params config: temperature, max-length, etc.
+      - export & import model
 
 ## Deploy to Vercel
 
