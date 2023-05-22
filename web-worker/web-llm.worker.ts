@@ -1,5 +1,7 @@
 import { SendToWorkerMessageEventData } from '@/types/web-llm';
 
+import { pipeline } from 'web-llm.js';
+
 const libs = [
   '/lib/WebLLM/tvmjs_runtime.wasi.js',
   '/lib/WebLLM/tvmjs.bundle.js',
@@ -10,44 +12,70 @@ let initalized = false;
 
 globalThis.addEventListener(
   'message',
-  ({ data }: { data: SendToWorkerMessageEventData }) => {
+  async ({ data }: { data: SendToWorkerMessageEventData }) => {
     // load script
-    if (!globalThis.tvmjsGlobalEnv) {
-      globalThis.postMessage({});
-      initalized = true;
+    // if (!globalThis.tvmjsGlobalEnv) {
+    //   globalThis.postMessage({});
+    //   initalized = true;
 
-      globalThis.tvmjsGlobalEnv = globalThis.tvmjsGlobalEnv || {};
+    //   globalThis.tvmjsGlobalEnv = globalThis.tvmjsGlobalEnv || {};
 
-      globalThis.tvmjsGlobalEnv.initialized = true;
+    //   globalThis.tvmjsGlobalEnv.initialized = true;
 
-      globalThis.importScripts(...libs);
-      const localLLMChatIntance = new LLMChatInstance();
+    //   globalThis.importScripts(...libs);
 
-      globalThis.tvmjsGlobalEnv.asyncOnGenerate = async function () {
-        await localLLMChatIntance.generate();
-      };
+    //   // try {
+    //   //   const pipe = pipeline((data) => {
+    //   //     console.log(data);
+    //   //   })
 
-      globalThis.tvmjsGlobalEnv.asyncOnReset = async function () {
-        await localLLMChatIntance.resetChat();
-      };
-      globalThis.tvmjsGlobalEnv.sentencePieceProcessor = (url: string) =>
-        globalThis.sentencepiece.sentencePieceProcessor(url);
+    //   //   await pipe.asyncInit();
+    //   //   const out = pipe.generate('hello');
+    //   //   console.log(out);
+    //   // } catch (error) {
+    //   //   console.error(error);
+
+    //   // }
+
+    //   const localLLMChatIntance = new LLMChatInstance();
+
+    //   globalThis.tvmjsGlobalEnv.asyncOnGenerate = async function () {
+    //     await localLLMChatIntance.generate();
+    //   };
+
+    //   globalThis.tvmjsGlobalEnv.asyncOnReset = async function () {
+    //     await localLLMChatIntance.resetChat();
+    //   };
+    //   globalThis.tvmjsGlobalEnv.sentencePieceProcessor = (url: string) =>
+    //     globalThis.sentencepiece.sentencePieceProcessor(url);
+    // }
+    // globalThis.tvmjsGlobalEnv.message = data.msg || '';
+    // globalThis.tvmjsGlobalEnv.curConversationIndex =
+    //   data.curConversationIndex || 0;
+
+    // if (data.ifNewConverstaion) {
+    //   globalThis.tvmjsGlobalEnv.asyncOnReset();
+    //   globalThis.tvmjsGlobalEnv.workerHistoryMsg = [];
+    //   globalThis.tvmjsGlobalEnv.workerHistoryMsg = data.workerHistoryMsg || [];
+    //   globalThis.tvmjsGlobalEnv.curConversationIndex =
+    //     data.curConversationIndex || 0;
+    //   console.log('switch to new conversation: ', data.curConversationIndex);
+    //   return;
+    // }
+
+    // globalThis.tvmjsGlobalEnv.asyncOnGenerate();
+
+    try {
+      const pipe = pipeline((data) => {
+        console.log(data);
+      });
+
+      await pipe.asyncInit();
+      const out = pipe.generate('hello');
+      console.log(out);
+    } catch (error) {
+      console.error(error);
     }
-    globalThis.tvmjsGlobalEnv.message = data.msg || '';
-    globalThis.tvmjsGlobalEnv.curConversationIndex =
-      data.curConversationIndex || 0;
-
-    if (data.ifNewConverstaion) {
-      globalThis.tvmjsGlobalEnv.asyncOnReset();
-      globalThis.tvmjsGlobalEnv.workerHistoryMsg = [];
-      globalThis.tvmjsGlobalEnv.workerHistoryMsg = data.workerHistoryMsg || [];
-      globalThis.tvmjsGlobalEnv.curConversationIndex =
-        data.curConversationIndex || 0;
-      console.log('switch to new conversation: ', data.curConversationIndex);
-      return;
-    }
-
-    globalThis.tvmjsGlobalEnv.asyncOnGenerate();
   },
   { passive: true },
 );

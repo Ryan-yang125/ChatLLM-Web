@@ -5,6 +5,7 @@ import { testMdStr } from '@/utils/codeblock';
 import { ChatConversation, InitInfo, Message } from '@/types/chat';
 import { ResFromWorkerMessageEventData } from '@/types/web-llm';
 
+import { pipeline } from 'web-llm.js';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -174,14 +175,25 @@ export const useChatStore = create<ChatStore>()(
         //   }, 3000);
         //   return;
         // }
+        try {
+          const pipe = pipeline((data) => {
+            console.log(data);
+          });
 
-        WebLLMInstance.chat(
-          {
-            msg: content,
-            curConversationIndex: get().curConversationIndex,
-          },
-          get().workerMessageCb,
-        );
+          await pipe.asyncInit();
+          const out = pipe.generate('hello');
+          console.log(out);
+        } catch (error) {
+          console.error(error);
+        }
+
+        // WebLLMInstance.chat(
+        //   {
+        //     msg: content,
+        //     curConversationIndex: get().curConversationIndex,
+        //   },
+        //   get().workerMessageCb,
+        // );
       },
       workerMessageCb(data) {
         if (data.type === 'initing') {
