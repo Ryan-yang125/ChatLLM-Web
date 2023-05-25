@@ -3,7 +3,7 @@
 
 <h1 align="center">ChatLLM Web</h1>
 
-[English](../README.md) / 简体中文
+[English](../README.md) / 简体中文 / [日本語](./README_JA.md)
 
 🗣️ 使用 WebGPU 在浏览器中与 LLM（语言模型）进行聊天，完全安全、私密，无需服务器。 由 [web-llm](https://github.com/mlc-ai/web-llm) 提供支持。
 

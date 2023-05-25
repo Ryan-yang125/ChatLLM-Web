@@ -3,7 +3,7 @@
 
 <h1 align="center">ChatLLM Web</h1>
 
-English / [简体中文](./docs/README_CN.md)
+English / [简体中文](./docs/README_CN.md) / [日本語](./docs/README_JA.md)
 
 🗣️ Chat with LLM like Vicuna totally in your browser with WebGPU, safely, privately, and with no server. Powered By [web-llm](https://github.com/mlc-ai/web-llm).
 
