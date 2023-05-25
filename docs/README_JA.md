@@ -1,15 +1,15 @@
 <div align="center">
-<img src="./docs/images/icon.jpg" alt="icon" height="160"/>
+<img src="./images/icon.jpg" alt="icon" height="160"/>
 
 <h1 align="center">ChatLLM Web</h1>
 
-[English](../README.md) / [简体中文](./docs/README_CN.md) / 日本語
+[English](../README.md) / [简体中文](./README_CN.md) / 日本語
 
 🗣️ Vicuna のような LLM と、WebGPU を使ってブラウザ上で安全に変えるかつプライベートに、そしてサーバを介さずに完全にチャットすることができます。[web-llm](https://github.com/mlc-ai/web-llm) を搭載。
 
 [Try it now](https://chat-llm-web.vercel.app)
 
-![cover](./docs/images/cover.png)
+![cover](./images/cover.png)
 
 </div>
 
