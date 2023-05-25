@@ -49,15 +49,15 @@ English / [简体中文](./docs/README_CN.md)
 
 - [✅] PWA
 
-- [] Settings: 
-   - ui: dark/light theme
-   - device: 
-      - gpu device choose
-      - cache usage and manage
-   - model: 
-      - support multi models: vicuna-7b✅ RedPajama-INCITE-Chat-3B []
-      - params config: temperature, max-length, etc.
-      - export & import model
+- [] Settings:
+  - ui: dark/light theme
+  - device:
+    - gpu device choose
+    - cache usage and manage
+  - model:
+    - support multi models: vicuna-7b✅ RedPajama-INCITE-Chat-3B []
+    - params config: temperature, max-length, etc.
+    - export & import model
 
 ## Deploy to Vercel
 

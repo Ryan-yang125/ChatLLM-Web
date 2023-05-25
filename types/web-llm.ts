@@ -1,5 +1,7 @@
 import { Message } from './chat';
 
+import { ChatModule } from '@mlc-ai/web-llm';
+
 type Prompts = [string, string][];
 type WorkerHistoryMsg = [string, string][];
 
@@ -25,6 +27,7 @@ declare global {
   var tvmjs: any;
   var EmccWASI: any;
   var importScripts: (...url: string[]) => void;
+  var chatModule: ChatModule;
 }
 
 export type LLMEngine = {

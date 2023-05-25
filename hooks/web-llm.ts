@@ -28,7 +28,7 @@ class WebLLM {
   ): Promise<void> {
     if (!this.worker) {
       this.worker = new Worker(
-        new URL('web-worker/web-llm.worker.ts', import.meta.url),
+        new URL('web-worker/new-web-llm.worker.ts', import.meta.url),
         { name: 'WebLLM' },
       );
     }
