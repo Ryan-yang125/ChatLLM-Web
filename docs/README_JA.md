@@ -76,9 +76,9 @@ npm run dev
 
 ## スクリーンショット
 
-![Home](./docs/images/home.png)
+![Home](./images/home.png)
 
-![More](./docs/images/mobile.png)
+![More](./images/mobile.png)
 
 ## ライセンス
 
