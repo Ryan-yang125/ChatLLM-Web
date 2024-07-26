@@ -2,6 +2,7 @@
 <img src="./docs/images/icon.jpg" alt="icon" height="160"/>
 
 <h1 align="center">ChatLLM Web</h1>
+<h2 align="center">🚀 Check the AI search engine https://discovai.io, discover top ai tools that best match your need</h2>
 
 English / [简体中文](./docs/README_CN.md) / [日本語](./docs/README_JA.md)
 
