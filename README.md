@@ -81,6 +81,9 @@ npm run dev
 
 ![More](./docs/images/mobile.png)
 
+## 🌟 History
+[![Star History Chart](https://api.star-history.com/svg?repos=Ryan-yang125/ChatLLM-Web&type=Date)](https://star-history.com/#Ryan-yang125/ChatLLM-Web&Date)
+
 ## LICENSE
 
 [MIT](./LICENSE)
