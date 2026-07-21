@@ -1,9 +1,9 @@
 // /** @type {import('next').NextConfig} */
-const withPWA = require('next-pwa')({
+const withPWA = require('@ducanh2912/next-pwa').default({
   dest: 'public',
 });
 module.exports = withPWA({
-  webpack(config, { isServer, dev }) {
+  webpack(config) {
     config.experiments = {
       asyncWebAssembly: true,
       layers: true,
