@@ -1,6 +1,7 @@
 {
   "name": "chat-llm-web",
   "version": "1.0.0",
+  "packageManager": "npm@10.9.4",
   "private": false,
   "description": "Chat with LLM totally in your browser with WebGPU, safely, privately, and with no server.",
   "author": {
@@ -23,24 +24,24 @@
     "@types/react": "18.0.38",
     "@types/react-dom": "18.0.11",
     "@vercel/analytics": "^1.0.1",
-    "autoprefixer": "10.4.14",
+    "autoprefixer": "10.5.4",
     "daisyui": "^2.51.5",
-    "eslint": "8.39.0",
-    "eslint-config-next": "13.3.1",
+    "eslint": "9.39.5",
+    "eslint-config-next": "15.5.16",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
-    "next": "13.3.1",
-    "next-pwa": "^5.6.0",
-    "postcss": "8.4.23",
+    "next": "15.5.22",
+    "@ducanh2912/next-pwa": "10.2.9",
+    "postcss": "8.5.23",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-markdown": "^8.0.7",
-    "react-syntax-highlighter": "^15.5.0",
+    "react-syntax-highlighter": "16.1.1",
     "rehype-mathjax": "^4.0.2",
     "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
-    "tailwindcss": "3.3.1",
-    "typescript": "5.0.4",
+    "tailwindcss": "3.4.18",
+    "typescript": "5.9.3",
     "zustand": "^4.3.7"
   },
   "engines": {
@@ -48,12 +49,18 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.9",
-    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@trivago/prettier-plugin-sort-imports": "6.0.2",
     "@types/file-saver": "^2.0.5",
     "@types/react-syntax-highlighter": "^15.5.6",
-    "eslint-config-prettier": "^8.8.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.8.7",
-    "prettier-plugin-tailwindcss": "^0.2.7"
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-prettier": "5.5.6",
+    "prettier": "3.9.6",
+    "prettier-plugin-tailwindcss": "0.8.1"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.8",
+    "postcss": "8.5.23",
+    "serialize-javascript": "7.0.7",
+    "sharp": "0.35.3"
   }
 }
