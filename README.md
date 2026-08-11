@@ -1,89 +1,55 @@
 <div align="center">
-<img src="./docs/images/icon.jpg" alt="icon" height="160"/>
-
-<h1 align="center">ChatLLM Web</h1>
-<h2 align="center">🚀 Check the AI search engine https://discovai.io, discover top ai tools that best match your need</h2>
-
-English / [简体中文](./docs/README_CN.md) / [日本語](./docs/README_JA.md)
-
-🗣️ Chat with LLM like Vicuna totally in your browser with WebGPU, safely, privately, and with no server. Powered By [web-llm](https://github.com/mlc-ai/web-llm).
-
-[Try it now](https://chat-llm-web.vercel.app)
-
-![cover](./docs/images/cover.png)
-
+  <img src="./public/brand/chatllm-icon-192.png" alt="ChatLLM" width="104" />
+  <h1>ChatLLM Web</h1>
+  <p>Private, browser-native AI chat powered by WebGPU.</p>
+  <p><a href="https://chatllm-web.pages.dev">Open ChatLLM</a></p>
 </div>
 
-## Features
+## What it does
 
-- 🤖 Everything runs inside the browser with **no server support** and is **accelerated with WebGPU**.
+- Runs Llama 3.2 1B entirely in a Web Worker with WebGPU.
+- Streams responses with Markdown, syntax highlighting, and math rendering.
+- Keeps conversations and model files in browser storage.
+- Supports multiple conversations, search, keyboard commands, dark mode, and PWA installation.
+- Downloads about 880 MB on the first model load and reuses the browser cache afterward.
 
-- ⚙️ Model runs in a web worker, ensuring that it doesn't block the user interface and providing a seamless experience.
+## Stack
 
-- 🚀 Easy to deploy for free with one-click on Vercel in under 1 minute, then you get your own ChatLLM Web.
+- React 18, TypeScript, Vite 6
+- Tailwind CSS 4 and Motion
+- TanStack Router and Zustand
+- MLC WebLLM
+- Cloudflare Pages
 
-- 💾 Model caching is supported, so you only need to download the model once.
+## Requirements
 
-- 💬 Multi-conversation chat, with all data stored locally in the browser for privacy.
-
-- 📝 Markdown and streaming response support: math, code highlighting, etc.
-
-- 🎨 responsive and well-designed UI, including dark mode.
-
-- 💻 PWA supported, download it and run totally offline.
-
-## Instructions
-
-- 🌐 To use this app, you need a browser that supports WebGPU, such as Chrome 113 or Chrome Canary. Chrome versions ≤ 112 are not supported.
-
-- 💻 You will need a GPU with about 6.4GB of memory. If your GPU has less memory, the app will still run, but the response time will be slower.
-
-- 📥 The first time you use the app, you will need to download the model. For the Vicuna-7b model that we are currently using, the download size is about 4GB. After the initial download, the model will be loaded from the browser cache for faster usage.
-
-- ℹ️ For more details, please visit [mlc.ai/web-llm](https://mlc.ai/web-llm/)
-
-## Roadmap
-
-- [✅] LLM: using web worker to create an LLM instance and generate answers.
-
-- [✅] Conversations: Multi-conversation support is available.
-
-- [✅] PWA
-
-- [] Settings:
-  - ui: dark/light theme
-  - device:
-    - gpu device choose
-    - cache usage and manage
-  - model:
-    - support multi models: vicuna-7b✅ RedPajama-INCITE-Chat-3B []
-    - params config: temperature, max-length, etc.
-    - export & import model
-
-## Deploy to Vercel
-
-1. Click
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FRyan-yang125%2FChatLLM-Web&project-name=chat-llm-web&repository-name=ChatLLM-Web), follow the instructions, and finish in just 1 minute.
-2. Enjoy it 😊
+Use a current Chrome or Edge browser with WebGPU and hardware acceleration enabled. The model needs roughly 1 GB of available GPU memory.
 
 ## Development
 
-```shell
-git clone https://github.com/Ryan-yang125/ChatLLM-Web.git
-cd ChatLLM-Web
-npm i
+```bash
+npm install
 npm run dev
 ```
 
-## Screenshots
+Quality checks:
 
-![Home](./docs/images/home.png)
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
 
-![More](./docs/images/mobile.png)
+## Deploy
 
-## 🌟 History
-[![Star History Chart](https://api.star-history.com/svg?repos=Ryan-yang125/ChatLLM-Web&type=Date)](https://star-history.com/#Ryan-yang125/ChatLLM-Web&Date)
+Build the static site and deploy `dist` to Cloudflare Pages:
 
-## LICENSE
+```bash
+npm run build
+npx wrangler pages deploy dist --project-name chatllm-web
+```
+
+## License
 
 [MIT](./LICENSE)

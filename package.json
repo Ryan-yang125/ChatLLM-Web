@@ -1,66 +1,65 @@
 {
-  "name": "chat-llm-web",
-  "version": "1.0.0",
-  "packageManager": "npm@10.9.4",
-  "private": false,
-  "description": "Chat with LLM totally in your browser with WebGPU, safely, privately, and with no server.",
-  "author": {
-    "name": "Ryan-yang125",
-    "email": "ruiyang0012@gmail.com",
-    "url": "https://github.com/Ryan-yang125"
-  },
+  "name": "chatllm-web",
+  "version": "2.0.0",
+  "description": "Private, browser-native local AI chat powered by WebGPU.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ryan-yang125/ChatLLM-Web.git"
+  },
+  "homepage": "https://chatllm-web.pages.dev",
+  "private": false,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "dev:local": "npm run dev && /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary --enable-dawn-features=disable_robustness",
-    "format": "prettier --write .",
-    "export": "next export"
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc -b",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@types/node": "18.16.0",
-    "@types/react": "18.0.38",
-    "@types/react-dom": "18.0.11",
-    "@vercel/analytics": "^1.0.1",
-    "autoprefixer": "10.5.4",
-    "daisyui": "^2.51.5",
-    "eslint": "9.39.5",
-    "eslint-config-next": "15.5.16",
-    "file-saver": "^2.0.5",
-    "jszip": "^3.10.1",
-    "next": "15.5.22",
-    "@ducanh2912/next-pwa": "10.2.9",
-    "postcss": "8.5.23",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "@mlc-ai/web-llm": "^0.2.84",
+    "@tanstack/react-router": "^1.170.18",
+    "katex": "^0.18.4",
+    "motion": "^12.43.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-markdown": "^8.0.7",
     "react-syntax-highlighter": "16.1.1",
-    "rehype-mathjax": "^4.0.2",
+    "rehype-katex": "^6.0.3",
     "remark-gfm": "^3.0.1",
     "remark-math": "^5.1.1",
-    "tailwindcss": "3.4.18",
-    "typescript": "5.9.3",
-    "zustand": "^4.3.7"
-  },
-  "engines": {
-    "node": ">=18"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.9",
-    "@trivago/prettier-plugin-sort-imports": "6.0.2",
-    "@types/file-saver": "^2.0.5",
-    "@types/react-syntax-highlighter": "^15.5.6",
-    "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-prettier": "5.5.6",
-    "prettier": "3.9.6",
-    "prettier-plugin-tailwindcss": "0.8.1"
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^26.1.1",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^10.8.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0",
+    "jsdom": "^29.1.1",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.65.0",
+    "vite": "^6.0.5",
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^4.1.10"
   },
   "overrides": {
-    "brace-expansion": "5.0.8",
+    "brace-expansion": "5.0.9",
     "postcss": "8.5.23",
-    "serialize-javascript": "7.0.7",
-    "sharp": "0.35.3"
+    "undici": "7.29.0"
   }
 }
