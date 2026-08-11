@@ -1,29 +1,32 @@
 <div align="center">
-  <img src="./public/brand/chatllm-icon-192.png" alt="ChatLLM" width="104" />
+  <img src="./public/brand/chatllm-icon-192.png" alt="ChatLLM" width="96" />
   <h1>ChatLLM Web</h1>
-  <p>Private, browser-native AI chat powered by WebGPU.</p>
-  <p><a href="https://chatllm-web.pages.dev">Open ChatLLM</a></p>
+  <p>Private local AI chat powered by WebGPU.</p>
+  <p>
+    <a href="https://chatllm-web.pages.dev">Live app</a>
+    ·
+    <a href="https://github.com/Ryan-yang125/ChatLLM-Web/releases">Releases</a>
+    ·
+    <a href="./LICENSE">MIT License</a>
+  </p>
 </div>
 
-## What it does
+ChatLLM runs **Llama 3.2 1B** directly in your browser with [MLC WebLLM](https://github.com/mlc-ai/web-llm). Conversations, prompts, and generated responses stay on your device.
 
-- Runs Llama 3.2 1B entirely in a Web Worker with WebGPU.
-- Streams responses with Markdown, syntax highlighting, and math rendering.
-- Keeps conversations and model files in browser storage.
-- Supports multiple conversations, search, keyboard commands, dark mode, and PWA installation.
-- Downloads about 880 MB on the first model load and reuses the browser cache afterward.
+## Highlights
 
-## Stack
+- Local WebGPU inference in a dedicated Web Worker
+- Streaming Markdown, syntax highlighting, and math rendering
+- Multiple conversations with local search and persistence
+- Command palette, keyboard shortcuts, dark mode, and responsive mobile UI
+- Installable PWA with browser-cached model files
+- Static deployment on Cloudflare Pages
 
-- React 18, TypeScript, Vite 6
-- Tailwind CSS 4 and Motion
-- TanStack Router and Zustand
-- MLC WebLLM
-- Cloudflare Pages
+## Try it
 
-## Requirements
+Open **[chatllm-web.pages.dev](https://chatllm-web.pages.dev)** in a current Chrome or Edge browser with WebGPU and hardware acceleration enabled.
 
-Use a current Chrome or Edge browser with WebGPU and hardware acceleration enabled. The model needs roughly 1 GB of available GPU memory.
+The first model load downloads about **880 MB** from Hugging Face. Later sessions reuse the browser cache. Roughly 1 GB of available GPU memory is recommended.
 
 ## Development
 
@@ -32,8 +35,6 @@ npm install
 npm run dev
 ```
 
-Quality checks:
-
 ```bash
 npm run typecheck
 npm run lint
@@ -41,15 +42,15 @@ npm test
 npm run build
 ```
 
-## Deploy
+## Stack
 
-Build the static site and deploy `dist` to Cloudflare Pages:
+React 18 · TypeScript · Vite 6 · Tailwind CSS 4 · Motion · TanStack Router · Zustand · MLC WebLLM
+
+## Deploy
 
 ```bash
 npm run build
 npx wrangler pages deploy dist --project-name chatllm-web
 ```
 
-## License
-
-[MIT](./LICENSE)
+Production: **[chatllm-web.pages.dev](https://chatllm-web.pages.dev)**
