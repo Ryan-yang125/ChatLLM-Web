@@ -28,7 +28,7 @@
 
 <!-- markdownlint-enable MD013 MD033 MD041 -->
 
-![ChatLLM Web v3](docs/assets/readme-chatllm-home.jpg)
+![ChatLLM Web v3](docs/assets/chatllm-v3-home.jpg)
 
 ## Local AI as a complete product
 
@@ -67,7 +67,7 @@ The Beautiful UI–inspired workspace provides streaming Markdown, observable lo
 - Each conversation keeps its own model, temperature, top-p, max output, and system prompt.
 - When a 4K input budget is exceeded, complete older turns are omitted and the activity trace reports it.
 
-![ChatLLM Web dark mode](docs/assets/readme-chatllm-dark.jpg)
+![ChatLLM Web dark mode](docs/assets/chatllm-v3-dark.jpg)
 
 ## Local Model Studio
 
@@ -80,7 +80,7 @@ Open `/models` to manage the runtime directly:
 - Explicit approvals for model downloads, external WASM, cache deletion, and memory fallback.
 
 <p align="center">
-  <img src="docs/assets/readme-chatllm-mobile.jpg" width="390" alt="ChatLLM Web mobile layout" />
+  <img src="docs/assets/chatllm-v3-mobile.jpg" width="390" alt="ChatLLM Web mobile layout" />
 </p>
 
 ## Local files

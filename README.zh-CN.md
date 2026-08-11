@@ -13,7 +13,7 @@
 
 <!-- markdownlint-enable MD013 MD033 MD041 -->
 
-![ChatLLM Web v3](docs/assets/readme-chatllm-home.jpg)
+![ChatLLM Web v3](docs/assets/chatllm-v3-home.jpg)
 
 ## 浏览器里的 Local Model Studio
 
@@ -52,7 +52,7 @@ ChatLLM Web v3 将专注的对话工作区与完整的本地模型管理结合�
 - 每个对话独立保存模型、temperature、top-p、最大输出和 system prompt。
 - 输入超过 4K 预算时移除最早的完整对话轮次，并在活动轨迹中显示提示。
 
-![ChatLLM Web 深色模式](docs/assets/readme-chatllm-dark.jpg)
+![ChatLLM Web 深色模式](docs/assets/chatllm-v3-dark.jpg)
 
 ## Local Model Studio
 
@@ -64,7 +64,7 @@ ChatLLM Web v3 将专注的对话工作区与完整的本地模型管理结合�
 - 缓存、兼容、下载、加载、活动和错误状态。
 - 模型下载、外部 WASM、删除缓存和低内存降级确认。
 
-<p align="center"><img src="docs/assets/readme-chatllm-mobile.jpg" width="390" alt="ChatLLM Web 移动端界面" /></p>
+<p align="center"><img src="docs/assets/chatllm-v3-mobile.jpg" width="390" alt="ChatLLM Web 移动端界面" /></p>
 
 ## 本地文件上下文
 
