@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta id="theme-color" name="theme-color" content="#efeeea" />
+    <meta name="description" content="Private local AI chat that runs entirely in your browser with WebGPU." />
+    <meta name="application-name" content="ChatLLM" />
+    <script>
+      (() => {
+        try {
+          const saved = localStorage.getItem("chatllm-theme:v2");
+          const mode = saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+          const resolved = mode === "system"
+            ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+            : mode;
+          document.documentElement.classList.toggle("dark", resolved === "dark");
+          document.documentElement.dataset.theme = resolved;
+          document.documentElement.dataset.themeMode = mode;
+          document.querySelector("#theme-color")?.setAttribute("content", resolved === "dark" ? "#141312" : "#efeeea");
+        } catch {
+          document.documentElement.dataset.theme = "light";
+          document.documentElement.dataset.themeMode = "system";
+        }
+      })();
+    </script>
+    <link rel="icon" href="/brand/chatllm-icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <title>ChatLLM — Private AI in your browser</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
