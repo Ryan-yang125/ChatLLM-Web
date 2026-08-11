@@ -8,7 +8,7 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-const THEME_STORAGE_KEY = "chatllm-theme:v2";
+const THEME_STORAGE_KEY = "chatllm-theme:v3";
 
 function getStoredTheme(): ThemeMode {
   try {
@@ -34,7 +34,7 @@ function applyTheme(theme: ThemeMode) {
   document.documentElement.dataset.themeMode = theme;
   document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute(
     "content",
-    resolved === "dark" ? "#141312" : "#efeeea"
+    resolved === "dark" ? "#17181a" : "#fafafb"
   );
 }
 

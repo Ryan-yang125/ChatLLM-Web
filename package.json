@@ -1,7 +1,7 @@
 {
   "name": "chatllm-web",
-  "version": "2.0.0",
-  "description": "Private, browser-native local AI chat powered by WebGPU.",
+  "version": "3.0.0",
+  "description": "A private local model studio and browser-native AI chat powered by WebGPU.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -22,12 +22,16 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@mlc-ai/web-llm": "^0.2.84",
+    "@mlc-ai/web-llm": "0.2.84",
     "@tanstack/react-router": "^1.170.18",
+    "glimm": "0.3.0",
+    "i18next": "26.3.6",
+    "idb": "8.0.3",
     "katex": "^0.18.4",
     "motion": "^12.43.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-i18next": "17.0.11",
     "react-markdown": "^8.0.7",
     "react-syntax-highlighter": "16.1.1",
     "rehype-katex": "^6.0.3",

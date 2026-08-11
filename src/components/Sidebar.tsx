@@ -1,159 +1,88 @@
 import { useMemo, useState } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import { Brand } from "@/components/Brand";
 import {
   ArrowLeftIcon,
+  ComponentIcon,
   GithubIcon,
+  LanguagesIcon,
   MessageCircleIcon,
   MonitorIcon,
   PlusIcon,
   SearchIcon,
-  SlidersHorizontalIcon,
   Trash2Icon,
 } from "@/components/icons";
 import { useTheme } from "@/components/ThemeProvider";
 import { groupConversations, timeLabel } from "@/lib/chat-utils";
 import { useChatStore } from "@/store/chat";
 
-export function Sidebar({
-  onOpenCommand,
-  onCloseMobile,
-}: {
-  onOpenCommand: () => void;
-  onCloseMobile?: () => void;
-}) {
+export function Sidebar({ onOpenCommand, onCloseMobile }: { onOpenCommand: () => void; onCloseMobile?: () => void }) {
+  const { t } = useTranslation();
   const reduced = useReducedMotion();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { theme, setTheme } = useTheme();
   const [query, setQuery] = useState("");
-  const {
-    conversations,
-    activeConversationId,
-    isGenerating,
-    createConversation,
-    selectConversation,
-    deleteConversation,
-  } = useChatStore();
-
-  const filtered = useMemo(() => {
+  const state = useChatStore();
+  const groups = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return conversations;
-    return conversations.filter((conversation) =>
-      conversation.title.toLowerCase().includes(needle),
-    );
-  }, [conversations, query]);
-
-  const groups = useMemo(() => groupConversations(filtered), [filtered]);
-
-  function newConversation() {
-    createConversation();
-    onCloseMobile?.();
-  }
+    return groupConversations(needle
+      ? state.conversations.filter((conversation) => conversation.title.toLowerCase().includes(needle))
+      : state.conversations);
+  }, [query, state.conversations]);
 
   function toggleTheme() {
-    const resolvedDark = document.documentElement.dataset.theme === "dark";
-    setTheme(resolvedDark ? "light" : "dark");
+    const dark = document.documentElement.dataset.theme === "dark";
+    const next = dark ? "light" : "dark";
+    setTheme(next);
+    state.setThemePreference(next);
   }
 
   return (
-    <aside className="sidebar" aria-label="Conversation library">
-      <div className="sidebar-brand-row">
-        <Brand />
-        {onCloseMobile ? (
-          <button className="icon-button mobile-close" type="button" onClick={onCloseMobile} aria-label="Close navigation">
-            <ArrowLeftIcon size={16} />
-          </button>
-        ) : null}
-      </div>
+    <aside className="sidebar" aria-label="ChatLLM navigation">
+      <div className="sidebar-brand-row"><Brand />{onCloseMobile ? <button className="icon-button mobile-close" onClick={onCloseMobile} aria-label="Close navigation"><ArrowLeftIcon size={16} /></button> : null}</div>
+      <button className="new-chat-button" type="button" disabled={state.isGenerating} onClick={() => { state.createConversation(); onCloseMobile?.(); }}><PlusIcon size={15} /><span>{t("nav.newChat")}</span><kbd>⌘N</kbd></button>
 
-      <button className="new-chat-button press" type="button" onClick={newConversation} disabled={isGenerating}>
-        <PlusIcon size={16} />
-        <span>New conversation</span>
-        <kbd>⌘N</kbd>
-      </button>
+      <nav className="primary-nav" aria-label="Primary">
+        <Link to="/" activeProps={{ className: "is-active" }} onClick={onCloseMobile}><MessageCircleIcon size={15} /><span>Chat</span></Link>
+        <Link to="/models" activeProps={{ className: "is-active" }} onClick={onCloseMobile}><ComponentIcon size={15} /><span>{t("nav.models")}</span><i className={`status-dot is-${state.runtimePhase}`} /></Link>
+      </nav>
 
-      <div className="sidebar-search mat-cap">
-        <SearchIcon size={15} />
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search conversations"
-          aria-label="Search conversations"
-        />
-        <button type="button" onClick={onOpenCommand} aria-label="Open command menu">
-          <kbd>⌘K</kbd>
-        </button>
-      </div>
+      <div className="sidebar-search"><SearchIcon size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search conversations" aria-label="Search conversations" /><button onClick={onOpenCommand}><kbd>⌘K</kbd></button></div>
 
-      <nav className="conversation-list no-bar" aria-label="Conversations">
-        {groups.length ? groups.map((group) => (
+      <div className="sidebar-section-label"><span>{t("nav.conversations")}</span><small>{state.conversations.length}</small></div>
+      <nav className="conversation-list" aria-label={t("nav.conversations")}>
+        {groups.map((group) => (
           <section className="conversation-group" key={group.label}>
             <h2>{group.label}</h2>
-            <div>
-              {group.conversations.map((conversation) => {
-                const active = conversation.id === activeConversationId;
-                const lastMessage = conversation.messages.at(-1)?.content || "No messages yet";
-                return (
-                  <motion.div
-                    layout={!reduced}
-                    className={`conversation-row${active ? " is-active" : ""}`}
-                    key={conversation.id}
-                  >
-                    <button
-                      className="conversation-select"
-                      type="button"
-                      onClick={() => {
-                        selectConversation(conversation.id);
-                        onCloseMobile?.();
-                      }}
-                      disabled={isGenerating && !active}
-                      aria-current={active ? "page" : undefined}
-                    >
-                      <span className="conversation-indicator" aria-hidden="true" />
-                      <span className="conversation-copy">
-                        <strong>{conversation.title}</strong>
-                        <small>{lastMessage}</small>
-                      </span>
-                      <time>{timeLabel(conversation.updatedAt)}</time>
-                    </button>
-                    <button
-                      className="conversation-delete"
-                      type="button"
-                      onClick={() => deleteConversation(conversation.id)}
-                      disabled={isGenerating}
-                      aria-label={`Delete ${conversation.title}`}
-                    >
-                      <Trash2Icon size={13} />
-                    </button>
-                  </motion.div>
-                );
-              })}
-            </div>
+            {group.conversations.map((conversation) => {
+              const active = conversation.id === state.activeConversationId && pathname === "/";
+              return (
+                <motion.div layout={!reduced} className={`conversation-row${active ? " is-active" : ""}`} key={conversation.id}>
+                  <Link className="conversation-select" to="/" onClick={() => { state.selectConversation(conversation.id); onCloseMobile?.(); }}>
+                    <span className="conversation-indicator" />
+                    <span className="conversation-copy"><strong>{conversation.title}</strong><small>{conversation.messages.at(-1)?.content || "No messages yet"}</small></span>
+                    <time>{timeLabel(conversation.updatedAt)}</time>
+                  </Link>
+                  <button className="conversation-delete" type="button" disabled={state.isGenerating} onClick={() => state.deleteConversation(conversation.id)} aria-label={`Delete ${conversation.title}`}><Trash2Icon size={13} /></button>
+                </motion.div>
+              );
+            })}
           </section>
-        )) : (
-          <div className="sidebar-empty">No conversations found</div>
-        )}
+        ))}
       </nav>
 
       <div className="sidebar-footer">
-        <button type="button" onClick={onOpenCommand}>
-          <SlidersHorizontalIcon size={15} />
-          <span>Commands</span>
-          <kbd>⌘K</kbd>
-        </button>
-        <a href="https://github.com/Ryan-yang125/ChatLLM-Web" target="_blank" rel="noreferrer">
-          <GithubIcon size={15} />
-          <span>GitHub</span>
-        </a>
-        <button type="button" onClick={toggleTheme}>
-          <MonitorIcon size={15} />
-          <span>Theme</span>
-          <small>{theme}</small>
-        </button>
-        <div className="privacy-row meta">
-          <MessageCircleIcon size={13} />
-          LOCAL · PRIVATE
-        </div>
+        <button type="button" onClick={() => state.setLanguage(state.preferences.language === "en" ? "zh" : "en")}><LanguagesIcon size={15} /><span>{t("nav.language")}</span><small>{state.preferences.language === "en" ? "EN" : "中文"}</small></button>
+        <button type="button" onClick={toggleTheme}><MonitorIcon size={15} /><span>{t("nav.theme")}</span><small>{theme}</small></button>
+        <a href="https://github.com/Ryan-yang125/ChatLLM-Web" target="_blank" rel="noreferrer"><GithubIcon size={15} /><span>{t("nav.github")}</span></a>
+        <div className="privacy-row"><ShieldLabel /></div>
       </div>
     </aside>
   );
+}
+
+function ShieldLabel() {
+  return <><span className="privacy-dot" />LOCAL · PRIVATE</>;
 }

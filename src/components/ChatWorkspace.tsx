@@ -1,229 +1,124 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import { Brand } from "@/components/Brand";
-import { ModelActivity } from "@/components/ModelActivity";
+import { PromptBar } from "@/components/beautiful-ui/PromptBar";
+import { PixelLoader, RecommendationCard, StatusTrace } from "@/components/beautiful-ui/Primitives";
 import {
   BracesIcon,
-  ChevronDownIcon,
-  CommandIcon,
+  CheckIcon,
   ComponentIcon,
+  CopyIcon,
   FileTextIcon,
   MenuIcon,
   MessageCircleIcon,
-  PauseIcon,
-  SearchIcon,
   SendIcon,
   ShieldCheckIcon,
   Trash2Icon,
-  UploadIcon,
 } from "@/components/icons";
-import { MODEL_CONTEXT_LABEL, MODEL_LABEL } from "@/lib/web-llm";
+import { allModels, getModel } from "@/features/models/catalog";
+import { isModelCompatible } from "@/features/runtime/device";
 import { getActiveConversation, useChatStore } from "@/store/chat";
 
-const suggestions = [
-  { label: "Explain WebGPU", prompt: "Explain how WebGPU accelerates a local language model.", icon: ComponentIcon },
-  { label: "Write clearly", prompt: "Help me rewrite this idea clearly and concisely.", icon: MessageCircleIcon },
-  { label: "Summarize notes", prompt: "Summarize these notes into key decisions and next steps.", icon: FileTextIcon },
-  { label: "Review code", prompt: "Review this code for correctness, clarity, and performance.", icon: BracesIcon },
-];
+const MarkdownMessage = lazy(() => import("@/components/MarkdownMessage").then((module) => ({ default: module.MarkdownMessage })));
 
-const MarkdownMessage = lazy(() =>
-  import("@/components/MarkdownMessage").then((module) => ({ default: module.MarkdownMessage })),
-);
-
-function phaseLabel(phase: ReturnType<typeof useChatStore.getState>["modelPhase"]) {
-  if (phase === "ready") return "Local · Ready";
-  if (phase === "loading") return "Local · Loading";
-  if (phase === "error") return "Local · Error";
-  return "Local · On demand";
-}
-
-export function ChatWorkspace({
-  onOpenCommand,
-  onOpenMobile,
-}: {
-  onOpenCommand: () => void;
-  onOpenMobile: () => void;
-}) {
+export function ChatWorkspace({ onOpenMobile }: { onOpenMobile: () => void }) {
+  const { t } = useTranslation();
   const reduced = useReducedMotion();
   const state = useChatStore();
   const active = getActiveConversation(state);
-  const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const models = allModels(state.customModels);
+  const activeModel = getModel(active?.modelId ?? state.recommendedModelId, state.customModels);
+  const recommended = models.find((model) => model.id === state.recommendedModelId) ?? models[0];
+
+  const suggestions = useMemo(() => [
+    { label: t("chat.suggestions.explain"), prompt: "Explain how WebGPU accelerates a local language model.", icon: ComponentIcon },
+    { label: t("chat.suggestions.write"), prompt: "Help me rewrite this idea clearly and concisely.", icon: MessageCircleIcon },
+    { label: t("chat.suggestions.summarize"), prompt: "Summarize these notes into key decisions and next steps.", icon: FileTextIcon },
+    { label: t("chat.suggestions.review"), prompt: "Review this code for correctness, clarity, and performance.", icon: BracesIcon },
+  ], [t]);
 
   useEffect(() => {
     const element = scrollRef.current;
     if (!element) return;
     element.scrollTo({ top: element.scrollHeight, behavior: reduced ? "auto" : "smooth" });
-  }, [active?.messages, reduced]);
+  }, [active?.messages, reduced, state.runtimePhase]);
 
-  function submit(value = input) {
-    const prompt = value.trim();
-    if (!prompt || state.isGenerating) return;
-    state.sendMessage(prompt);
-    setInput("");
-    if (textareaRef.current) textareaRef.current.style.height = "auto";
+  if (!active || !recommended) return null;
+
+  async function copyMessage(id: string, content: string) {
+    await navigator.clipboard.writeText(content);
+    setCopiedId(id);
+    window.setTimeout(() => setCopiedId(null), 1400);
   }
 
-  function chooseSuggestion(prompt: string) {
-    setInput(prompt);
-    requestAnimationFrame(() => textareaRef.current?.focus());
-  }
-
-  if (!active) return null;
+  const busy = ["checking", "downloading", "loading"].includes(state.runtimePhase);
+  const traceDetails = [
+    state.deviceProfile?.webGPU ? `WebGPU · ${state.deviceProfile.adapterName}` : "WebGPU unavailable",
+    activeModel ? `${activeModel.label} · ${activeModel.contextWindow / 1024}K context` : "Model pending",
+    state.contextNotice ?? "Prompts and responses stay on this device",
+  ];
 
   return (
     <main className="workspace" id="main-content">
       <header className="workspace-header">
-        <button className="icon-button mobile-menu" type="button" onClick={onOpenMobile} aria-label="Open conversations">
-          <MenuIcon size={17} />
-        </button>
+        <button className="icon-button mobile-menu" type="button" onClick={onOpenMobile} aria-label="Open conversations"><MenuIcon size={17} /></button>
         <div className="mobile-brand"><Brand /></div>
-        <div className="conversation-title">
-          <MessageCircleIcon size={16} />
-          <strong>{active.title}</strong>
-          <ChevronDownIcon size={13} />
-        </div>
+        <div className="conversation-title"><MessageCircleIcon size={15} /><strong>{active.title}</strong></div>
         <div className="workspace-actions">
-          <button className="model-selector mat-cap" type="button" aria-label="Current model">
-            <ComponentIcon size={15} />
-            <span>{MODEL_LABEL}</span>
-            <ChevronDownIcon size={13} />
-          </button>
-          <span className={`model-pill mat-cap is-${state.modelPhase}`}>
-            <i aria-hidden="true" />
-            {phaseLabel(state.modelPhase)}
-          </span>
-          <button className="icon-button header-command" type="button" onClick={onOpenCommand} aria-label="Open commands">
-            <CommandIcon size={16} />
-          </button>
-          <button
-            className="icon-button"
-            type="button"
-            onClick={() => state.clearConversation(active.id)}
-            disabled={state.isGenerating || active.messages.length === 0}
-            aria-label="Clear conversation"
-          >
-            <Trash2Icon size={16} />
-          </button>
+          <Link className="header-model" to="/models"><ComponentIcon size={14} /><span>{activeModel?.label ?? active.modelId}</span><i className={`status-dot is-${state.runtimePhase}`} /></Link>
+          <button className="icon-button" type="button" onClick={() => state.clearConversation(active.id)} disabled={state.isGenerating || !active.messages.length} aria-label="Clear conversation"><Trash2Icon size={15} /></button>
         </div>
       </header>
 
-      <section className="chat-panel mat-panel">
-        <ModelActivity />
-
-        <div className="message-scroll no-bar" ref={scrollRef}>
+      <section className="chat-panel bui-window">
+        <div className="message-scroll" ref={scrollRef}>
           {active.messages.length === 0 ? (
-            <motion.div
-              className="empty-state"
-              initial={reduced ? false : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduced ? 0 : 0.28, ease: [0.23, 1, 0.32, 1] }}
-            >
-              <img src="/brand/chatllm-mark.png" alt="" />
-              <h1>How can I help?</h1>
-              <div className="suggestion-grid">
+            <motion.div className="empty-state-v3" initial={reduced ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="empty-brand"><img src="/brand/chatllm-mark.png" alt="" /><span>LOCAL MODEL STUDIO</span></div>
+              <h1>{t("chat.title")}</h1>
+              <RecommendationCard model={recommended} compatible={isModelCompatible(recommended, state.deviceProfile)} onUse={() => void state.requestModel(recommended.id)} />
+              <div className="suggestion-grid-v3">
                 {suggestions.map(({ label, prompt, icon: Icon }) => (
-                  <button className="suggestion press mat-row" type="button" onClick={() => chooseSuggestion(prompt)} key={label}>
-                    <Icon size={16} />
-                    <span>{label}</span>
-                    <SendIcon size={14} />
-                  </button>
+                  <button type="button" key={label} onClick={() => state.sendMessage(prompt)}><Icon size={15} /><span>{label}</span><SendIcon size={13} /></button>
                 ))}
               </div>
-              <div className="trust-row meta">
-                <span><ShieldCheckIcon size={13} />PRIVATE BY DEFAULT</span>
-                <span><ComponentIcon size={13} />WEBGPU</span>
-                <span><FileTextIcon size={13} />{MODEL_CONTEXT_LABEL} CONTEXT</span>
-              </div>
+              <div className="trust-row-v3"><span><ShieldCheckIcon size={13} />{t("chat.private")}</span><span><ComponentIcon size={13} />WebGPU</span><span><FileTextIcon size={13} />4K context</span></div>
             </motion.div>
           ) : (
-            <div className="message-list">
+            <div className="message-list-v3">
+              <StatusTrace label={busy ? state.modelMessage : state.isGenerating ? "Generating" : "Local activity"} details={traceDetails} active={busy || state.isGenerating} />
+              {busy ? <div className="inline-loader"><PixelLoader label={state.modelMessage || "Preparing model"} progress={state.modelProgress} /></div> : null}
               <AnimatePresence initial={false}>
-                {active.messages.map((message) => (
-                  <motion.article
-                    className={`message is-${message.role}${message.isError ? " is-error" : ""}`}
-                    key={message.id}
-                    initial={reduced ? false : { opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: reduced ? 0 : 0.22, ease: [0.23, 1, 0.32, 1] }}
-                  >
-                    <div className="message-avatar">
-                      {message.role === "assistant" ? <img src="/brand/chatllm-mark.png" alt="" /> : <span>You</span>}
-                    </div>
-                    <div className="message-body">
-                      <header>
-                        <strong>{message.role === "assistant" ? MODEL_LABEL : "You"}</strong>
-                        <time>{new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(message.createdAt)}</time>
-                      </header>
-                      {message.role === "assistant" ? (
-                        message.content ? (
-                          <Suspense fallback={<p>{message.content}</p>}>
-                            <MarkdownMessage content={message.content} />
-                          </Suspense>
-                        ) : <span className="typing-indicator" aria-label="Generating"><i /><i /><i /></span>
-                      ) : (
-                        <p>{message.content}</p>
-                      )}
-                      {message.stats ? <small className="message-stats meta">{message.stats}</small> : null}
-                    </div>
-                  </motion.article>
-                ))}
+                {active.messages.map((message) => {
+                  const messageModel = getModel(message.modelId ?? active.modelId, state.customModels);
+                  const messageAttachments = state.attachments.filter((attachment) => message.attachmentIds.includes(attachment.id));
+                  return (
+                    <motion.article className={`message-v3 is-${message.role}${message.isError ? " is-error" : ""}`} key={message.id} initial={reduced ? false : { opacity: 0, y: 7 }} animate={{ opacity: 1, y: 0 }}>
+                      <div className="message-v3-header">
+                        <div className="message-avatar-v3">{message.role === "assistant" ? <img src="/brand/chatllm-mark.png" alt="" /> : <span>Y</span>}</div>
+                        <div><strong>{message.role === "assistant" ? messageModel?.label ?? "ChatLLM" : "You"}</strong><time>{new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(message.createdAt)}</time></div>
+                        {message.content ? <button type="button" onClick={() => void copyMessage(message.id, message.content)} aria-label="Copy message">{copiedId === message.id ? <CheckIcon size={14} /> : <CopyIcon size={14} />}</button> : null}
+                      </div>
+                      {messageAttachments.length ? <div className="message-context-chips">{messageAttachments.map((attachment) => <span key={attachment.id}><FileTextIcon size={11} />{attachment.name}</span>)}</div> : null}
+                      <div className="message-content-v3">
+                        {message.role === "assistant" ? message.content ? (
+                          <Suspense fallback={<p>{message.content}</p>}><MarkdownMessage content={message.content} /></Suspense>
+                        ) : <PixelLoader label="Generating" /> : <p>{message.content}</p>}
+                      </div>
+                      {message.status === "stopped" ? <span className="message-state">Stopped</span> : null}
+                      {message.stats ? <div className="message-stats-v3"><span>{(message.stats.elapsedMs / 1000).toFixed(1)}s</span><span>{message.stats.text || "Local generation"}</span></div> : null}
+                    </motion.article>
+                  );
+                })}
               </AnimatePresence>
             </div>
           )}
         </div>
-
-        <div className="composer-shell">
-          <div className="composer mat-cap">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(event) => {
-                setInput(event.target.value);
-                event.target.style.height = "auto";
-                event.target.style.height = `${Math.min(event.target.scrollHeight, 150)}px`;
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-                  event.preventDefault();
-                  submit();
-                }
-              }}
-              placeholder="Ask anything…"
-              aria-label="Message"
-              rows={1}
-            />
-            <div className="composer-toolbar">
-              <button type="button" aria-label="Add context" title="Add context">
-                <UploadIcon size={16} />
-              </button>
-              <button className="composer-model" type="button" aria-label="Current model">
-                <ComponentIcon size={14} />
-                {MODEL_LABEL}
-                <ChevronDownIcon size={12} />
-              </button>
-              <button className="composer-search" type="button" onClick={onOpenCommand}>
-                <SearchIcon size={14} />
-                <span>Commands</span>
-                <kbd>⌘K</kbd>
-              </button>
-              <button
-                className="send-button press"
-                type="button"
-                onClick={() => state.isGenerating ? state.cancelGeneration() : submit()}
-                disabled={!state.isGenerating && input.trim().length === 0}
-                aria-label={state.isGenerating ? "Stop generation" : "Send message"}
-              >
-                {state.isGenerating ? <PauseIcon size={17} /> : <SendIcon size={17} />}
-              </button>
-            </div>
-          </div>
-          <div className="composer-meta meta">
-            WEBGPU · RUNS LOCALLY · 0 BYTES SENT · {MODEL_CONTEXT_LABEL} CONTEXT
-          </div>
-        </div>
+        <PromptBar />
       </section>
     </main>
   );

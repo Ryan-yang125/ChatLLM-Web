@@ -5,7 +5,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".next", "node_modules", "coverage", "audit", ".wrangler", "public/lib/**"] },
+  { ignores: ["dist", ".next", "node_modules", "coverage", "audit", ".wrangler", "public/lib/**", "legacy/**"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

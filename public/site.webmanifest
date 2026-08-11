@@ -1,11 +1,11 @@
 {
   "name": "ChatLLM",
   "short_name": "ChatLLM",
-  "description": "Private local AI chat powered by WebGPU.",
+  "description": "Private local model studio and AI chat powered by WebGPU.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#efeeea",
-  "theme_color": "#efeeea",
+  "background_color": "#fafafb",
+  "theme_color": "#fafafb",
   "icons": [
     {
       "src": "/brand/chatllm-icon-192.png",
