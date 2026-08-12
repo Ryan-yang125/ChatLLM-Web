@@ -65,6 +65,8 @@ export type RuntimePhase =
 
 export type ModelPhase = RuntimePhase;
 export type ModelCacheState = "unknown" | "available" | "cached";
+export type ModelTier = "stable" | "experimental" | "advanced" | "custom";
+export type ModelCapability = "chat" | "coding" | "reasoning" | "vision" | "tools" | "base";
 
 export type DeviceProfile = {
   webGPU: boolean;
@@ -87,6 +89,9 @@ export type ModelDefinition = {
   vramRequiredMB: number;
   contextWindow: number;
   source: "built-in" | "custom";
+  tier: ModelTier;
+  capabilities: ModelCapability[];
+  variants: ModelRecord[];
   record?: ModelRecord;
 };
 

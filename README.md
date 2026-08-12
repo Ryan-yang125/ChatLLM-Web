@@ -22,19 +22,22 @@
 <p align="center">
   <a href="https://github.com/Ryan-yang125/ChatLLM-Web/releases/latest"><img src="https://img.shields.io/github/v/release/Ryan-yang125/ChatLLM-Web?label=release&color=1f2124" alt="Latest release" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/code-MIT-1f2124.svg" alt="MIT license" /></a>
-  <img src="https://img.shields.io/badge/models-5%20local-4568ff.svg" alt="Five local models" />
+  <img src="https://img.shields.io/badge/curated-18%20models-4568ff.svg" alt="18 curated models" />
+  <img src="https://img.shields.io/badge/catalog-65%20logical%20models-4568ff.svg" alt="65 official logical models" />
   <img src="https://img.shields.io/badge/inference-WebGPU-4568ff.svg" alt="WebGPU inference" />
 </p>
 
 <!-- markdownlint-enable MD013 MD033 MD041 -->
 
-![ChatLLM Web v3](docs/assets/chatllm-v3-home.jpg)
+![ChatLLM Web v3.1](docs/assets/chatllm-v3-home.jpg)
 
 ## Local AI as a complete product
 
-ChatLLM Web v3 combines a focused conversation workspace with a complete Local Model Studio. It inspects the current browser, recommends a model, confirms large downloads, streams answers from a dedicated worker, and keeps conversations and files on the device.
+ChatLLM Web v3.1 combines a focused conversation workspace with a complete Local Model Studio. It inspects the current browser, recommends a model, confirms large downloads, streams answers from a dedicated worker, and keeps conversations and files on the device.
 
-- Run five curated language models with the official [MLC WebLLM](https://github.com/mlc-ai/web-llm) runtime.
+- Start with 18 curated chat, coding, reasoning, vision, and tool-capable models.
+- Open the Advanced catalog to browse 65 logical models backed by 163 official WebLLM records.
+- Let device features select a compatible quantization while every logical model stays a single catalog item.
 - See WebGPU, memory, browser storage, compatibility, cache, and runtime status.
 - Download, load, switch, unload, retry, and delete models without refreshing the page.
 - Attach TXT, Markdown, JSON, and common code files as direct local context.
@@ -44,17 +47,32 @@ ChatLLM Web v3 combines a focused conversation workspace with a complete Local M
 
 The static application is served by Cloudflare Pages. Model assets come directly from their declared Hugging Face and WebLLM library URLs. ChatLLM has no application backend, account, API key, analytics, or telemetry.
 
-## Curated model catalog
+## Model catalog
 
-| Model | WebLLM ID | Declared VRAM | Best for |
+| Tier | Model | Declared VRAM | Capability |
 | --- | --- | ---: | --- |
-| Llama 3.2 1B | `Llama-3.2-1B-Instruct-q4f16_1-MLC` | 879 MB | Fast chat and lower-resource devices |
-| Qwen 3.5 0.8B | `Qwen3.5-0.8B-q4f16_1-MLC` | 1.6 GB | Lightweight bilingual tasks |
-| Qwen 3.5 2B | `Qwen3.5-2B-q4f16_1-MLC` | 2.2 GB | Default everyday assistant |
-| Qwen 3.5 4B | `Qwen3.5-4B-q4f16_1-MLC` | 3.8 GB | Higher-quality general answers |
-| Qwen 2.5 Coder 3B | `Qwen2.5-Coder-3B-Instruct-q4f16_1-MLC` | 2.4 GB | Code review and technical work |
+| Stable | SmolLM2 360M | 376 MB | Fast chat |
+| Stable | Gemma 3 1B | 711 MB | Compact assistance |
+| Stable | Llama 3.2 1B | 879 MB | Lower-resource chat |
+| Stable | Qwen 3.5 0.8B | 1.6 GB | Lightweight bilingual work |
+| Stable | Qwen 3.5 2B | 2.2 GB | Default everyday assistant |
+| Stable | Llama 3.2 3B | 2.2 GB | Balanced general chat |
+| Stable | Phi-4 Mini | 3.4 GB | Instruction following |
+| Stable | Qwen 3.5 4B | 3.8 GB | Higher-quality answers |
+| Stable | Qwen 3 8B | 5.6 GB | Multilingual chat |
+| Stable | Qwen 3.5 9B | 6.3 GB | Best general quality |
+| Stable | Qwen 2.5 Coder 0.5B | 945 MB | Fast code completion |
+| Stable | Qwen 2.5 Coder 1.5B | 1.6 GB | Light code explanation |
+| Stable | Qwen 2.5 Coder 3B | 2.4 GB | Code review |
+| Stable | Qwen 2.5 Coder 7B | 5.0 GB | Complex coding |
+| Experimental | Ministral 3 3B Reasoning | 2.8 GB | Compact reasoning |
+| Experimental | DeepSeek R1 Distill Qwen 7B | 5.0 GB | Long-form reasoning |
+| Experimental | Phi 3.5 Vision | 3.9 GB | Vision preview |
+| Experimental | Hermes 2 Pro Mistral 7B | 3.9 GB | Local tool use |
 
-Every curated model uses a 4K context window. ChatLLM recommends Qwen 3.5 2B when WebGPU is available and the browser reports at least 8 GB of device memory. Unknown or lower-memory devices start with Llama 3.2 1B. WebGPU features and buffer limits remain part of compatibility checks.
+Every curated model uses a 4K context window. ChatLLM recommends Qwen 3.5 2B when WebGPU is available and the browser reports at least 8 GB of device memory. Unknown or lower-memory devices start with Llama 3.2 1B. WebGPU features, buffer limits, and declared memory requirements drive compatibility and high-memory states.
+
+The Advanced switch reveals the complete official catalog for power users. Quantization and 1K variants are grouped under one logical model. ChatLLM selects `q4f16` when `shader-f16` is available and chooses the compatible `q4f32` variant where the official catalog provides one. The original model ID remains attached to each conversation and generated message.
 
 ## Chat Workspace
 
@@ -75,9 +93,12 @@ Open `/models` to manage the runtime directly:
 
 - Device insight cards for WebGPU, reported memory, browser storage, and WebLLM.
 - Evidence-based model recommendation.
-- Filterable built-in and custom model catalog.
+- Searchable catalog with Recommended, Compatible, Cached, Coding, Reasoning, Vision, Tools, Experimental, and Custom filters.
+- Stable and Experimental curated tiers plus the complete Advanced WebLLM directory.
 - Cache, compatibility, download, load, active, and error states.
 - Explicit approvals for model downloads, external WASM, cache deletion, and memory fallback.
+
+![ChatLLM Web v3.1 model catalog](docs/assets/chatllm-v3.1-models.jpg)
 
 <p align="center">
   <img src="docs/assets/chatllm-v3-mobile.jpg" width="390" alt="ChatLLM Web mobile layout" />

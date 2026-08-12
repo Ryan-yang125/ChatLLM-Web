@@ -13,13 +13,15 @@
 
 <!-- markdownlint-enable MD013 MD033 MD041 -->
 
-![ChatLLM Web v3](docs/assets/chatllm-v3-home.jpg)
+![ChatLLM Web v3.1](docs/assets/chatllm-v3-home.jpg)
 
 ## 浏览器里的 Local Model Studio
 
-ChatLLM Web v3 将专注的对话工作区与完整的本地模型管理结合在一起。应用会检测当前浏览器、推荐合适模型、确认大文件下载、通过独立 Worker 流式生成，并将对话和文件保存在设备上。
+ChatLLM Web v3.1 将专注的对话工作区与完整的本地模型管理结合在一起。应用会检测当前浏览器、推荐合适模型、确认大文件下载、通过独立 Worker 流式生成，并将对话和文件保存在设备上。
 
-- 使用官方 MLC WebLLM 运行五个精选模型。
+- 提供 18 个精选对话、编程、推理、视觉与工具模型。
+- 高级目录开放 65 个逻辑模型，对应 WebLLM 官方 163 条运行记录。
+- 根据设备 features 自动选择兼容量化版本，每个逻辑模型在目录中只出现一次。
 - 查看 WebGPU、设备内存、浏览器存储、兼容性、缓存和运行状态。
 - 无需刷新页面即可下载、加载、切换、卸载和删除模型。
 - 将文本、Markdown、JSON 和常见代码文件直接加入本地上下文。
@@ -29,17 +31,32 @@ ChatLLM Web v3 将专注的对话工作区与完整的本地模型管理结合�
 
 应用由 Cloudflare Pages 提供静态页面，没有应用后端、账号、API Key、分析与遥测。模型资源由浏览器直接从清单声明的 Hugging Face 与 WebLLM 地址下载。
 
-## 精选模型
+## 模型目录
 
-| 模型 | WebLLM ID | 显存需求 | 适用场景 |
+| 分层 | 模型 | 显存需求 | 能力 |
 | --- | --- | ---: | --- |
-| Llama 3.2 1B | `Llama-3.2-1B-Instruct-q4f16_1-MLC` | 879 MB | 低资源设备与快速对话 |
-| Qwen 3.5 0.8B | `Qwen3.5-0.8B-q4f16_1-MLC` | 1.6 GB | 中英文轻量任务 |
-| Qwen 3.5 2B | `Qwen3.5-2B-q4f16_1-MLC` | 2.2 GB | 默认通用助手 |
-| Qwen 3.5 4B | `Qwen3.5-4B-q4f16_1-MLC` | 3.8 GB | 更高质量的通用回答 |
-| Qwen 2.5 Coder 3B | `Qwen2.5-Coder-3B-Instruct-q4f16_1-MLC` | 2.4 GB | 编程、审查与代码解释 |
+| 稳定 | SmolLM2 360M | 376 MB | 快速对话 |
+| 稳定 | Gemma 3 1B | 711 MB | 轻量日常辅助 |
+| 稳定 | Llama 3.2 1B | 879 MB | 低资源对话 |
+| 稳定 | Qwen 3.5 0.8B | 1.6 GB | 中英文轻量任务 |
+| 稳定 | Qwen 3.5 2B | 2.2 GB | 默认通用助手 |
+| 稳定 | Llama 3.2 3B | 2.2 GB | 均衡通用对话 |
+| 稳定 | Phi-4 Mini | 3.4 GB | 指令执行 |
+| 稳定 | Qwen 3.5 4B | 3.8 GB | 更高质量回答 |
+| 稳定 | Qwen 3 8B | 5.6 GB | 多语言对话 |
+| 稳定 | Qwen 3.5 9B | 6.3 GB | 高性能设备通用任务 |
+| 稳定 | Qwen 2.5 Coder 0.5B | 945 MB | 快速代码补全 |
+| 稳定 | Qwen 2.5 Coder 1.5B | 1.6 GB | 轻量代码解释 |
+| 稳定 | Qwen 2.5 Coder 3B | 2.4 GB | 代码审查 |
+| 稳定 | Qwen 2.5 Coder 7B | 5.0 GB | 复杂编程任务 |
+| 实验 | Ministral 3 3B Reasoning | 2.8 GB | 轻量推理 |
+| 实验 | DeepSeek R1 Distill Qwen 7B | 5.0 GB | 长链路推理 |
+| 实验 | Phi 3.5 Vision | 3.9 GB | 视觉预览 |
+| 实验 | Hermes 2 Pro Mistral 7B | 3.9 GB | 本地工具调用 |
 
-所有精选模型使用 4K 上下文。浏览器支持 WebGPU 且报告至少 8 GB 设备内存时，ChatLLM 推荐 Qwen 3.5 2B；设备信息未知或内存较低时推荐 Llama 3.2 1B。WebGPU features 与 buffer limits 同样参与兼容性判断。
+所有精选模型使用 4K 上下文。浏览器支持 WebGPU 且报告至少 8 GB 设备内存时，ChatLLM 推荐 Qwen 3.5 2B；设备信息未知或内存较低时推荐 Llama 3.2 1B。WebGPU features、buffer limits 与声明的显存需求共同决定兼容和高内存状态。
+
+高级目录面向需要完整 WebLLM 模型范围的用户。量化版本与 1K 版本会归并到同一个逻辑模型。设备具备 `shader-f16` 时优先使用 `q4f16`，官方目录提供兼容版本时可自动选择 `q4f32`。每个对话与生成消息继续保存实际模型 ID。
 
 ## Chat Workspace
 
@@ -60,9 +77,12 @@ ChatLLM Web v3 将专注的对话工作区与完整的本地模型管理结合�
 
 - WebGPU、设备内存、浏览器存储和 WebLLM 状态卡片。
 - 由真实设备信息驱动的模型推荐。
-- 可筛选的内置与自定义模型目录。
+- 支持推荐、兼容、缓存、编程、推理、视觉、工具、实验和自定义筛选。
+- 提供稳定、实验精选分层与完整 WebLLM 高级目录。
 - 缓存、兼容、下载、加载、活动和错误状态。
 - 模型下载、外部 WASM、删除缓存和低内存降级确认。
+
+![ChatLLM Web v3.1 模型目录](docs/assets/chatllm-v3.1-models.jpg)
 
 <p align="center"><img src="docs/assets/chatllm-v3-mobile.jpg" width="390" alt="ChatLLM Web 移动端界面" /></p>
 

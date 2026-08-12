@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   allModels,
+  buildAppConfig,
+  CURATED_MODEL_COUNT,
   DEFAULT_MODEL_ID,
   FALLBACK_MODEL_ID,
+  logicalModelKey,
+  modelPickerModels,
+  OFFICIAL_LOGICAL_MODEL_COUNT,
+  OFFICIAL_MODEL_RECORD_COUNT,
   parseCustomManifest,
 } from "../src/features/models/catalog";
-import { recommendModelId } from "../src/features/runtime/device";
+import { modelFit, recommendModelId } from "../src/features/runtime/device";
 import type { DeviceProfile } from "../src/types/chat";
 
 const profile = (memory: number | null, webGPU = true): DeviceProfile => ({
@@ -14,15 +20,53 @@ const profile = (memory: number | null, webGPU = true): DeviceProfile => ({
   deviceMemoryGB: memory,
   storageUsage: 0,
   storageQuota: 1,
-  maxBufferSize: 1,
-  maxStorageBufferBindingSize: 1,
-  features: [],
+  maxBufferSize: 4_294_967_296,
+  maxStorageBufferBindingSize: 4_294_967_296,
+  features: ["shader-f16"],
   checkedAt: 1,
 });
 
 describe("model catalog", () => {
-  it("ships the curated five-model catalog", () => {
-    expect(allModels()).toHaveLength(5);
+  it("ships 18 curated models", () => {
+    expect(CURATED_MODEL_COUNT).toBe(18);
+    expect(allModels()).toHaveLength(18);
+  });
+
+  it("groups the full official catalog into logical models", () => {
+    const models = allModels([], { includeAdvanced: true });
+    expect(OFFICIAL_MODEL_RECORD_COUNT).toBe(163);
+    expect(OFFICIAL_LOGICAL_MODEL_COUNT).toBe(65);
+    expect(models).toHaveLength(65);
+    expect(new Set(models.map((model) => logicalModelKey(model.id))).size).toBe(65);
+  });
+
+  it("keeps an active advanced model in the prompt picker", () => {
+    const advancedId = "TinyLlama-1.1B-Chat-v1.0-q4f16_1-MLC";
+    const models = modelPickerModels([], advancedId);
+    expect(models[0].id).toBe(advancedId);
+    expect(models).toHaveLength(19);
+  });
+
+  it("keeps one picker row when the active curated quantization differs", () => {
+    const activeId = "SmolLM2-360M-Instruct-q4f16_1-MLC";
+    const models = modelPickerModels([], activeId, { ...profile(8), features: [] });
+    expect(models).toHaveLength(18);
+    expect(models.find((model) => model.label === "SmolLM2 360M")?.id).toBe(activeId);
+  });
+
+  it("selects a non-f16 variant when shader-f16 is unavailable", () => {
+    const models = allModels([], { profile: { ...profile(8), features: [] } });
+    expect(models.find((model) => model.label === "SmolLM2 360M")?.id).toBe("SmolLM2-360M-Instruct-q4f32_1-MLC");
+  });
+
+  it("marks models above the device memory budget", () => {
+    const model = allModels([], { profile: profile(4) }).find((item) => item.label === "Qwen 3.5 9B");
+    expect(model).toBeDefined();
+    expect(modelFit(model!, profile(4))).toBe("high-memory");
+  });
+
+  it("passes every official runtime record to WebLLM", () => {
+    expect(buildAppConfig().model_list).toHaveLength(163);
   });
 
   it("recommends Qwen 2B for known 8GB devices", () => {
@@ -58,5 +102,17 @@ describe("model catalog", () => {
         model_lib: "https://example.com/model.wasm",
       },
     }), [])).toThrow("approved HTTPS host");
+  });
+
+  it("rejects custom IDs that collide with the official catalog", () => {
+    expect(() => parseCustomManifest(JSON.stringify({
+      schemaVersion: 1,
+      label: "Duplicate",
+      record: {
+        model: "https://huggingface.co/example/model",
+        model_id: FALLBACK_MODEL_ID,
+        model_lib: "https://raw.githubusercontent.com/example/models/main/model.wasm",
+      },
+    }), [])).toThrow("already exists");
   });
 });

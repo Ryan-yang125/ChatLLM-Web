@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/components/icons";
 import { ContextCard, SweepSurface } from "@/components/beautiful-ui/Primitives";
 import { readLocalFiles, type PromptPreset, validateAttachmentSelection } from "@/features/context/files";
-import { allModels, getModel } from "@/features/models/catalog";
+import { getModel, modelPickerModels } from "@/features/models/catalog";
 import { getActiveConversation, getConversationAttachments, useChatStore } from "@/store/chat";
 
 const presets: { id: PromptPreset; label: string; command: string }[] = [
@@ -30,7 +30,7 @@ export function PromptBar() {
   const state = useChatStore();
   const conversation = getActiveConversation(state);
   const attachments = getConversationAttachments(state);
-  const models = allModels(state.customModels);
+  const models = modelPickerModels(state.customModels, conversation?.modelId, state.deviceProfile);
   const [input, setInput] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [preset, setPreset] = useState<PromptPreset>();
@@ -45,10 +45,7 @@ export function PromptBar() {
     setMenu(null);
   }, [conversation?.id]);
 
-  const activeModel = useMemo(
-    () => getModel(conversation?.modelId ?? state.recommendedModelId, state.customModels),
-    [conversation?.modelId, state.customModels, state.recommendedModelId],
-  );
+  const activeModel = getModel(conversation?.modelId ?? state.recommendedModelId, state.customModels, state.deviceProfile);
 
   if (!conversation) return null;
 
@@ -152,7 +149,7 @@ export function PromptBar() {
                 setMenu(null);
                 void state.requestModel(model.id);
               }}>
-                <span><ComponentIcon size={15} /></span><div><strong>{model.label}</strong><small>{model.bestFor}</small></div>
+                <span><ComponentIcon size={15} /></span><div><strong>{model.label}</strong><small>{model.bestFor} · {t(`models.tier.${model.tier}`)}</small></div>
                 <i>{model.contextWindow / 1024}K</i>
               </button>
             )) : null}

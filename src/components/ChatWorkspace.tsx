@@ -30,8 +30,8 @@ export function ChatWorkspace({ onOpenMobile }: { onOpenMobile: () => void }) {
   const active = getActiveConversation(state);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const models = allModels(state.customModels);
-  const activeModel = getModel(active?.modelId ?? state.recommendedModelId, state.customModels);
+  const models = allModels(state.customModels, { profile: state.deviceProfile });
+  const activeModel = getModel(active?.modelId ?? state.recommendedModelId, state.customModels, state.deviceProfile);
   const recommended = models.find((model) => model.id === state.recommendedModelId) ?? models[0];
 
   const suggestions = useMemo(() => [
@@ -94,7 +94,7 @@ export function ChatWorkspace({ onOpenMobile }: { onOpenMobile: () => void }) {
               {busy ? <div className="inline-loader"><PixelLoader label={state.modelMessage || "Preparing model"} progress={state.modelProgress} /></div> : null}
               <AnimatePresence initial={false}>
                 {active.messages.map((message) => {
-                  const messageModel = getModel(message.modelId ?? active.modelId, state.customModels);
+                  const messageModel = getModel(message.modelId ?? active.modelId, state.customModels, state.deviceProfile);
                   const messageAttachments = state.attachments.filter((attachment) => message.attachmentIds.includes(attachment.id));
                   return (
                     <motion.article className={`message-v3 is-${message.role}${message.isError ? " is-error" : ""}`} key={message.id} initial={reduced ? false : { opacity: 0, y: 7 }} animate={{ opacity: 1, y: 0 }}>
