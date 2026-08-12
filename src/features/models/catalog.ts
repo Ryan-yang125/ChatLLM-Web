@@ -10,6 +10,7 @@ import type {
 
 export const DEFAULT_MODEL_ID = "Qwen3.5-2B-q4f16_1-MLC";
 export const FALLBACK_MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+export const AGENT_MODEL_ID = "Hermes-2-Pro-Mistral-7B-q4f16_1-MLC";
 export const MODEL_CONTEXT_WINDOW = 4096;
 
 type CuratedModelSpec = {
@@ -40,7 +41,9 @@ const CURATED_MODEL_SPECS: CuratedModelSpec[] = [
   { id: "Ministral-3-3B-Reasoning-2512-q4f16_1-MLC", label: "Ministral 3 3B Reasoning", family: "Mistral", bestFor: "Compact reasoning experiments", bestForZh: "轻量推理实验", tier: "experimental", capabilities: ["chat", "reasoning"] },
   { id: "DeepSeek-R1-Distill-Qwen-7B-q4f16_1-MLC", label: "DeepSeek R1 Distill Qwen 7B", family: "DeepSeek", bestFor: "Long-form reasoning", bestForZh: "长链路推理任务", tier: "experimental", capabilities: ["chat", "reasoning"] },
   { id: "Phi-3.5-vision-instruct-q4f16_1-MLC", label: "Phi 3.5 Vision", family: "Phi", bestFor: "Vision model preview", bestForZh: "视觉模型预览", tier: "experimental", capabilities: ["chat", "vision"] },
-  { id: "Hermes-2-Pro-Mistral-7B-q4f16_1-MLC", label: "Hermes 2 Pro Mistral 7B", family: "Hermes", bestFor: "Experimental local tool use", bestForZh: "本地工具调用实验", tier: "experimental", capabilities: ["chat", "tools"] },
+  { id: AGENT_MODEL_ID, label: "Hermes 2 Pro Mistral 7B", family: "Hermes", bestFor: "Local agent workflows", bestForZh: "本地 Agent 工作流", tier: "experimental", capabilities: ["chat", "tools"] },
+  { id: "Hermes-2-Pro-Llama-3-8B-q4f16_1-MLC", label: "Hermes 2 Pro Llama 3 8B", family: "Hermes", bestFor: "Reliable multi-step tool use", bestForZh: "可靠的多步工具调用", tier: "experimental", capabilities: ["chat", "tools"] },
+  { id: "Hermes-3-Llama-3.1-8B-q4f16_1-MLC", label: "Hermes 3 Llama 3.1 8B", family: "Hermes", bestFor: "Higher-quality local agents", bestForZh: "更高质量的本地 Agent", tier: "experimental", capabilities: ["chat", "tools"] },
 ];
 
 const OFFICIAL_RECORDS = prebuiltAppConfig.model_list;

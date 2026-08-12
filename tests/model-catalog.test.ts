@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   allModels,
+  AGENT_MODEL_ID,
   buildAppConfig,
   CURATED_MODEL_COUNT,
   DEFAULT_MODEL_ID,
@@ -27,9 +28,15 @@ const profile = (memory: number | null, webGPU = true): DeviceProfile => ({
 });
 
 describe("model catalog", () => {
-  it("ships 18 curated models", () => {
-    expect(CURATED_MODEL_COUNT).toBe(18);
-    expect(allModels()).toHaveLength(18);
+  it("ships 20 curated models", () => {
+    expect(CURATED_MODEL_COUNT).toBe(20);
+    expect(allModels()).toHaveLength(20);
+  });
+
+  it("ships three native tool-calling models", () => {
+    const toolModels = allModels().filter((model) => model.capabilities.includes("tools"));
+    expect(toolModels).toHaveLength(3);
+    expect(toolModels.map((model) => model.id)).toContain(AGENT_MODEL_ID);
   });
 
   it("groups the full official catalog into logical models", () => {
@@ -44,13 +51,13 @@ describe("model catalog", () => {
     const advancedId = "TinyLlama-1.1B-Chat-v1.0-q4f16_1-MLC";
     const models = modelPickerModels([], advancedId);
     expect(models[0].id).toBe(advancedId);
-    expect(models).toHaveLength(19);
+    expect(models).toHaveLength(21);
   });
 
   it("keeps one picker row when the active curated quantization differs", () => {
     const activeId = "SmolLM2-360M-Instruct-q4f16_1-MLC";
     const models = modelPickerModels([], activeId, { ...profile(8), features: [] });
-    expect(models).toHaveLength(18);
+    expect(models).toHaveLength(20);
     expect(models.find((model) => model.label === "SmolLM2 360M")?.id).toBe(activeId);
   });
 

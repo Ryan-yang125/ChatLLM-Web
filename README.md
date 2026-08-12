@@ -6,7 +6,7 @@
 
 <h1 align="center">ChatLLM Web</h1>
 
-<p align="center"><strong>A private local model studio and AI chat, powered by WebGPU.</strong></p>
+<p align="center"><strong>A private local model studio, AI chat, and agent workspace powered by WebGPU.</strong></p>
 
 <p align="center">
   <a href="./README.md"><strong>English</strong></a> · <a href="./README.zh-CN.md">简体中文</a>
@@ -22,20 +22,25 @@
 <p align="center">
   <a href="https://github.com/Ryan-yang125/ChatLLM-Web/releases/latest"><img src="https://img.shields.io/github/v/release/Ryan-yang125/ChatLLM-Web?label=release&color=1f2124" alt="Latest release" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/code-MIT-1f2124.svg" alt="MIT license" /></a>
-  <img src="https://img.shields.io/badge/curated-18%20models-4568ff.svg" alt="18 curated models" />
+  <img src="https://img.shields.io/badge/curated-20%20models-4568ff.svg" alt="20 curated models" />
+  <img src="https://img.shields.io/badge/agent-3%20native%20models-4568ff.svg" alt="3 native agent models" />
   <img src="https://img.shields.io/badge/catalog-65%20logical%20models-4568ff.svg" alt="65 official logical models" />
   <img src="https://img.shields.io/badge/inference-WebGPU-4568ff.svg" alt="WebGPU inference" />
 </p>
 
 <!-- markdownlint-enable MD013 MD033 MD041 -->
 
-![ChatLLM Web v3.1](docs/assets/chatllm-v3-home.jpg)
+![ChatLLM Web v3.2 Local Agent Workspace](docs/assets/chatllm-v3.2-agent.jpg)
 
 ## Local AI as a complete product
 
-ChatLLM Web v3.1 combines a focused conversation workspace with a complete Local Model Studio. It inspects the current browser, recommends a model, confirms large downloads, streams answers from a dedicated worker, and keeps conversations and files on the device.
+ChatLLM Web v3.2 combines Chat, a Local Agent Workspace, and Local Model Studio in one browser-native product. It inspects the current browser, recommends a model, runs WebLLM in a dedicated worker, and keeps conversations, selected files, tool results, and artifacts on the device.
 
-- Start with 18 curated chat, coding, reasoning, vision, and tool-capable models.
+- Switch each conversation between Chat and Agent modes.
+- Run native WebLLM function calling with three Hermes models.
+- Inspect selected files, search context, calculate, and work with saved artifacts through sandboxed local tools.
+- Review every artifact write as a line diff before it is committed to IndexedDB.
+- Start with 20 curated chat, coding, reasoning, vision, and tool-capable models.
 - Open the Advanced catalog to browse 65 logical models backed by 163 official WebLLM records.
 - Let device features select a compatible quantization while every logical model stays a single catalog item.
 - See WebGPU, memory, browser storage, compatibility, cache, and runtime status.
@@ -68,7 +73,9 @@ The static application is served by Cloudflare Pages. Model assets come directly
 | Experimental | Ministral 3 3B Reasoning | 2.8 GB | Compact reasoning |
 | Experimental | DeepSeek R1 Distill Qwen 7B | 5.0 GB | Long-form reasoning |
 | Experimental | Phi 3.5 Vision | 3.9 GB | Vision preview |
-| Experimental | Hermes 2 Pro Mistral 7B | 3.9 GB | Local tool use |
+| Experimental | Hermes 2 Pro Mistral 7B | 3.9 GB | Default local agent |
+| Experimental | Hermes 2 Pro Llama 3 8B | 4.9 GB | Multi-step tool use |
+| Experimental | Hermes 3 Llama 3.1 8B | 4.8 GB | Higher-quality local agent |
 
 Every curated model uses a 4K context window. ChatLLM recommends Qwen 3.5 2B when WebGPU is available and the browser reports at least 8 GB of device memory. Unknown or lower-memory devices start with Llama 3.2 1B. WebGPU features, buffer limits, and declared memory requirements drive compatibility and high-memory states.
 
@@ -87,6 +94,23 @@ The Beautiful UI–inspired workspace provides streaming Markdown, observable lo
 
 ![ChatLLM Web dark mode](docs/assets/chatllm-v3-dark.jpg)
 
+## Local Agent Workspace
+
+Choose **Agent** in the Prompt Bar to start a local tool-calling run. A conversation keeps its selected mode and model. If the current model lacks native function calling, ChatLLM asks to load Hermes 2 Pro Mistral 7B.
+
+| Local tool | Access | Approval |
+| --- | --- | --- |
+| List and read selected context files | Current run selection | Automatic |
+| Search selected context files | Current run selection | Automatic |
+| Calculate arithmetic | Sandboxed parser | Automatic |
+| List and read conversation artifacts | Current conversation | Automatic |
+| Create an artifact | Current conversation | Diff approval |
+| Update an artifact | Current conversation | Diff approval |
+
+The Agent Run Rail records planning, tool calls, approvals, completion, stops, and errors. Each run has an eight-step safety limit. Stop preserves finished steps; Retry starts a fresh run from the original task. Approved Markdown, code, JSON, and text artifacts are stored in IndexedDB, opened in the Artifact panel, copied, or downloaded. Each artifact is limited to 64 KB and 2,000 lines so the complete approval diff stays reviewable.
+
+Agent tools never receive arbitrary disk access. Shell execution, direct filesystem writes, network search, MCP servers, RAG, and third-party data sources stay outside the v3.2 runtime boundary.
+
 ## Local Model Studio
 
 Open `/models` to manage the runtime directly:
@@ -98,7 +122,7 @@ Open `/models` to manage the runtime directly:
 - Cache, compatibility, download, load, active, and error states.
 - Explicit approvals for model downloads, external WASM, cache deletion, and memory fallback.
 
-![ChatLLM Web v3.1 model catalog](docs/assets/chatllm-v3.1-models.jpg)
+![ChatLLM Web v3.2 model catalog](docs/assets/chatllm-v3.2-models.jpg)
 
 <p align="center">
   <img src="docs/assets/chatllm-v3-mobile.jpg" width="390" alt="ChatLLM Web mobile layout" />
@@ -143,8 +167,13 @@ URLs must use HTTPS and match the deployment CSP allowlist for Hugging Face, HF/
 ```mermaid
 flowchart LR
   UI[Beautiful UI component layer] --> Chat[Chat Workspace]
+  UI --> Agent[Local Agent Workspace]
   UI --> Studio[Local Model Studio]
   Chat --> Store[Zustand product state]
+  Agent --> Store
+  Agent --> Tools[Sandboxed local tools]
+  Tools --> Approval[Artifact diff approval]
+  Approval --> IDB
   Studio --> Store
   Store --> Engine[WebLLM Engine Manager]
   Engine --> Worker[Dedicated Web Worker]
@@ -156,13 +185,15 @@ flowchart LR
 
 | Data | Storage | Boundary |
 | --- | --- | --- |
-| Conversations and messages | IndexedDB | This browser |
-| File text and preferences | IndexedDB | This browser |
+| Conversations, messages, and Agent runs | IndexedDB | This browser |
+| File text, artifacts, and preferences | IndexedDB | This browser |
 | Model weights and WASM | WebLLM Cache API | This browser |
 | App shell | Service Worker cache | This browser |
 | Generation | Dedicated worker + WebGPU | This device |
 
 The Engine Manager owns a single worker and a single active model. Request, conversation, and model identity prevent stale worker events from overwriting newer state. OOM and GPU device-loss paths release the worker and offer a lighter model.
+
+v3.2 uses the fresh `chatllm-v3.2` IndexedDB schema. Earlier local conversation data is left untouched and is not loaded into the new Agent-capable schema.
 
 ## Early runtime archive
 

@@ -4,7 +4,7 @@ import { initReactI18next } from "react-i18next";
 const resources = {
   en: {
     translation: {
-      common: { recommended: "Recommended", compatible: "Compatible", checkDevice: "Check device", memory: "Memory", context: "Context", privacy: "Privacy", onDevice: "On-device", cancel: "Cancel", confirm: "Confirm" },
+      common: { recommended: "Recommended", compatible: "Compatible", checkDevice: "Check device", memory: "Memory", context: "Context", privacy: "Privacy", onDevice: "On-device", cancel: "Cancel", confirm: "Confirm", close: "Close" },
       nav: { newChat: "New chat", conversations: "Conversations", models: "Models", github: "GitHub", theme: "Theme", language: "Language" },
       chat: {
         title: "Local AI, ready when you are.",
@@ -16,6 +16,17 @@ const resources = {
         context: "Context",
         commands: "Commands",
         suggestions: { explain: "Explain WebGPU", write: "Write clearly", summarize: "Summarize notes", review: "Review code" },
+      },
+      agent: {
+        mode: "Conversation mode", chat: "Chat", agent: "Agent", title: "Put your local model to work.", placeholder: "Give your local agent a task…",
+        run: "Agent run", planning: "Planning next action", artifact: "Artifact", openArtifact: "Open", copy: "Copy", download: "Download", apply: "Apply change",
+        suggestions: { brief: "Create a project brief", audit: "Audit selected files", calculate: "Summarize local data", improve: "Improve an artifact" },
+        status: { planning: "Planning", running: "Running", "awaiting-approval": "Needs approval", complete: "Complete", stopped: "Stopped", error: "Error" },
+        step: { running: "Running", "awaiting-approval": "Review", complete: "Done", declined: "Declined", error: "Error" },
+        tools: {
+          list_context_files: "List context", read_context_file: "Read file", search_context: "Search files", calculate: "Calculate",
+          list_artifacts: "List artifacts", read_artifact: "Read artifact", create_artifact: "Create artifact", update_artifact: "Update artifact",
+        },
       },
       runtime: {
         idle: "On demand", checking: "Checking", approval: "Needs approval", downloading: "Downloading",
@@ -39,12 +50,23 @@ const resources = {
   },
   zh: {
     translation: {
-      common: { recommended: "推荐", compatible: "兼容", checkDevice: "检查设备", memory: "内存", context: "上下文", privacy: "隐私", onDevice: "本地运行", cancel: "取消", confirm: "确认" },
+      common: { recommended: "推荐", compatible: "兼容", checkDevice: "检查设备", memory: "内存", context: "上下文", privacy: "隐私", onDevice: "本地运行", cancel: "取消", confirm: "确认", close: "关闭" },
       nav: { newChat: "新建对话", conversations: "对话", models: "模型", github: "GitHub", theme: "主题", language: "语言" },
       chat: {
         title: "本地 AI，随时开始。", private: "默认隐私", placeholder: "输入问题…", send: "发送消息", stop: "停止生成",
         addContext: "添加本地文件", context: "上下文", commands: "命令",
         suggestions: { explain: "解释 WebGPU", write: "优化表达", summarize: "总结笔记", review: "审查代码" },
+      },
+      agent: {
+        mode: "对话模式", chat: "对话", agent: "Agent", title: "让本地模型完成任务。", placeholder: "给本地 Agent 一个任务…",
+        run: "Agent 执行", planning: "规划下一步", artifact: "Artifact", openArtifact: "打开", copy: "复制", download: "下载", apply: "应用修改",
+        suggestions: { brief: "创建项目简报", audit: "审查所选文件", calculate: "总结本地数据", improve: "优化 Artifact" },
+        status: { planning: "规划中", running: "执行中", "awaiting-approval": "等待确认", complete: "已完成", stopped: "已停止", error: "错误" },
+        step: { running: "执行中", "awaiting-approval": "待审核", complete: "完成", declined: "已拒绝", error: "错误" },
+        tools: {
+          list_context_files: "列出上下文", read_context_file: "读取文件", search_context: "搜索文件", calculate: "计算",
+          list_artifacts: "列出 Artifact", read_artifact: "读取 Artifact", create_artifact: "创建 Artifact", update_artifact: "更新 Artifact",
+        },
       },
       runtime: {
         idle: "按需加载", checking: "检测中", approval: "等待确认", downloading: "下载中", loading: "加载中",

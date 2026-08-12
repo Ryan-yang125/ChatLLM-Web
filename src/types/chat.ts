@@ -2,6 +2,10 @@ import type { ModelRecord } from "@mlc-ai/web-llm";
 
 export type MessageRole = "system" | "assistant" | "user";
 export type MessageStatus = "streaming" | "complete" | "stopped" | "error";
+export type ConversationMode = "chat" | "agent";
+export type ArtifactKind = "markdown" | "code" | "json" | "text";
+export type AgentRunStatus = "planning" | "running" | "awaiting-approval" | "complete" | "stopped" | "error";
+export type AgentStepStatus = "running" | "awaiting-approval" | "complete" | "declined" | "error";
 
 export type GenerationSettings = {
   temperature: number;
@@ -13,6 +17,29 @@ export type GenerationSettings = {
 export type GenerationStats = {
   text: string;
   elapsedMs: number;
+};
+
+export type AgentStep = {
+  id: string;
+  sequence: number;
+  toolCallId: string;
+  toolName: string;
+  arguments: Record<string, unknown>;
+  status: AgentStepStatus;
+  result?: string;
+  artifactId?: string;
+  startedAt: number;
+  completedAt?: number;
+};
+
+export type AgentRun = {
+  id: string;
+  input: string;
+  status: AgentRunStatus;
+  steps: AgentStep[];
+  maxSteps: number;
+  startedAt: number;
+  completedAt?: number;
 };
 
 export type Message = {
@@ -28,16 +55,34 @@ export type Message = {
   updatedAt: number;
   isStreaming?: boolean;
   isError?: boolean;
+  agentRun?: AgentRun;
 };
 
 export type Conversation = {
   id: string;
   title: string;
   modelId: string;
+  mode: ConversationMode;
   settings: GenerationSettings;
   messages: Message[];
   createdAt: number;
   updatedAt: number;
+};
+
+export type Artifact = {
+  id: string;
+  conversationId: string;
+  title: string;
+  kind: ArtifactKind;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
+};
+
+export type ArtifactProposal = {
+  operation: "create" | "update";
+  artifact: Artifact;
+  previousContent: string;
 };
 
 export type LocalAttachment = {
@@ -110,4 +155,6 @@ export type ApprovalRequest =
   | { kind: "load-model"; modelId: string; prompt?: string; attachmentIds?: string[] }
   | { kind: "delete-cache"; modelId: string }
   | { kind: "custom-model"; manifest: CustomModelManifest }
-  | { kind: "fallback"; modelId: string };
+  | { kind: "fallback"; modelId: string }
+  | { kind: "agent-mode"; modelId: string }
+  | { kind: "agent-tool"; conversationId: string; messageId: string; stepId: string; proposal: ArtifactProposal };

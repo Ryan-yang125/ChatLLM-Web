@@ -1,5 +1,7 @@
 import type {
+  ChatCompletionMessageToolCall,
   ChatCompletionMessageParam,
+  ChatCompletionTool,
   WebWorkerMLCEngine,
 } from "@mlc-ai/web-llm";
 import {
@@ -12,6 +14,7 @@ import type { CustomModelManifest, GenerationSettings, Message } from "@/types/c
 
 export type EngineProgress = { progress: number | null; text: string; phase: "downloading" | "loading" };
 export type GenerationResult = { content: string; statsText: string; elapsedMs: number };
+export type AgentCompletionResult = GenerationResult & { toolCalls: ChatCompletionMessageToolCall[] };
 
 function friendlyError(reason: unknown) {
   const message = reason instanceof Error ? reason.message : String(reason);
@@ -119,6 +122,53 @@ class EngineManager {
       }
       const statsText = await this.engine.runtimeStatsText().catch(() => "");
       return { content, statsText, elapsedMs: Math.round(performance.now() - startedAt) };
+    } catch (error) {
+      throw new Error(friendlyError(error), { cause: error });
+    }
+  }
+
+  async agentStep(
+    history: ChatCompletionMessageParam[],
+    settings: GenerationSettings,
+    tools: ChatCompletionTool[],
+    onChunk: (content: string) => void,
+    signal: AbortSignal,
+  ): Promise<AgentCompletionResult> {
+    if (!this.engine || !this.activeModelId) throw new Error("Load an agent model before starting a run.");
+    const currentOperation = ++this.operationId;
+    const startedAt = performance.now();
+
+    try {
+      const chunks = await this.engine.chat.completions.create({
+        messages: history,
+        tools,
+        tool_choice: "auto",
+        stream: true,
+        stream_options: { include_usage: true },
+        temperature: settings.temperature,
+        top_p: settings.topP,
+        max_tokens: settings.maxTokens,
+      });
+      let content = "";
+      let toolCalls: ChatCompletionMessageToolCall[] = [];
+      for await (const chunk of chunks) {
+        if (signal.aborted || currentOperation !== this.operationId) break;
+        content += chunk.choices[0]?.delta.content || "";
+        const deltaCalls = chunk.choices[0]?.delta.tool_calls;
+        if (deltaCalls?.length) {
+          toolCalls = deltaCalls.map((call, index) => ({
+            id: call.id ?? String(call.index ?? index),
+            type: "function",
+            function: {
+              name: call.function?.name ?? "",
+              arguments: call.function?.arguments ?? "{}",
+            },
+          }));
+        }
+        onChunk(content);
+      }
+      const statsText = await this.engine.runtimeStatsText().catch(() => "");
+      return { content, toolCalls, statsText, elapsedMs: Math.round(performance.now() - startedAt) };
     } catch (error) {
       throw new Error(friendlyError(error), { cause: error });
     }
