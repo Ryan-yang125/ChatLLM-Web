@@ -5,6 +5,7 @@ import {
   ChevronDownIcon,
   ComponentIcon,
   FileTextIcon,
+  MessageCircleIcon,
   PauseIcon,
   PlusIcon,
   SendIcon,
@@ -30,7 +31,7 @@ export function PromptBar() {
   const state = useChatStore();
   const conversation = getActiveConversation(state);
   const attachments = getConversationAttachments(state);
-  const models = modelPickerModels(state.customModels, conversation?.modelId, state.deviceProfile);
+  const pickerModels = modelPickerModels(state.customModels, conversation?.modelId, state.deviceProfile);
   const [input, setInput] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [preset, setPreset] = useState<PromptPreset>();
@@ -48,6 +49,10 @@ export function PromptBar() {
   const activeModel = getModel(conversation?.modelId ?? state.recommendedModelId, state.customModels, state.deviceProfile);
 
   if (!conversation) return null;
+
+  const models = conversation.mode === "agent"
+    ? pickerModels.filter((model) => model.capabilities.includes("tools"))
+    : pickerModels;
 
   function submit() {
     const prompt = input.trim();
@@ -182,8 +187,8 @@ export function PromptBar() {
           ref={textareaRef}
           value={input}
           rows={1}
-          placeholder={t("chat.placeholder")}
-          aria-label={t("chat.placeholder")}
+          placeholder={conversation.mode === "agent" ? t("agent.placeholder") : t("chat.placeholder")}
+          aria-label={conversation.mode === "agent" ? t("agent.placeholder") : t("chat.placeholder")}
           onChange={(event) => {
             const value = event.target.value;
             setInput(value);
@@ -201,6 +206,10 @@ export function PromptBar() {
           }}
         />
         <div className="prompt-toolbar">
+          <div className="conversation-mode" aria-label={t("agent.mode")}>
+            <button className={conversation.mode === "chat" ? "is-active" : ""} type="button" onClick={() => state.requestMode("chat")} aria-label={t("agent.chat")} aria-pressed={conversation.mode === "chat"}><MessageCircleIcon size={13} /><span>{t("agent.chat")}</span></button>
+            <button className={conversation.mode === "agent" ? "is-active" : ""} type="button" onClick={() => state.requestMode("agent")} aria-label={t("agent.agent")} aria-pressed={conversation.mode === "agent"}><ComponentIcon size={13} /><span>{t("agent.agent")}</span></button>
+          </div>
           <button className="prompt-icon" type="button" onClick={() => setMenu(menu === "files" ? null : "files")} aria-label={t("chat.addContext")}><PlusIcon size={16} /></button>
           <button className="prompt-icon prompt-at" type="button" onClick={() => setMenu(menu === "mentions" ? null : "mentions")} aria-label="Mention context">@</button>
           <button className="prompt-model" type="button" onClick={() => setMenu(menu === "models" ? null : "models")}>
@@ -219,7 +228,7 @@ export function PromptBar() {
         </div>
       </div>
       {fileError ? <p className="prompt-error" role="alert">{fileError}</p> : null}
-      <p className="prompt-meta">WEBGPU · LOCAL ONLY · 4K CONTEXT</p>
+      <p className="prompt-meta">{conversation.mode === "agent" ? "LOCAL AGENT · 8 STEPS · APPROVED WRITES" : "WEBGPU · LOCAL ONLY · 4K CONTEXT"}</p>
     </div>
   );
 }

@@ -1,8 +1,17 @@
 import { create } from "zustand";
+import type { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 import { i18n } from "@/features/i18n";
 import { contextBlock, PROMPT_PRESETS, type PromptPreset } from "@/features/context/files";
 import {
+  AGENT_SYSTEM_PROMPT,
+  AGENT_TOOLS,
+  commitArtifactProposal,
+  executeAgentTool,
+  parseToolArguments,
+} from "@/features/agent/tools";
+import {
   allModels,
+  AGENT_MODEL_ID,
   DEFAULT_MODEL_ID,
   FALLBACK_MODEL_ID,
   getModel,
@@ -12,8 +21,11 @@ import { inspectDevice, recommendModelId } from "@/features/runtime/device";
 import { engineManager } from "@/features/runtime/engine-manager";
 import { titleFromPrompt } from "@/lib/chat-utils";
 import type {
+  Artifact,
+  AgentRun,
   ApprovalRequest,
   Conversation,
+  ConversationMode,
   CustomModelManifest,
   DeviceProfile,
   GenerationSettings,
@@ -40,6 +52,7 @@ function createConversation(modelId = DEFAULT_MODEL_ID, now = Date.now()): Conve
     id: createId(),
     title: "New conversation",
     modelId,
+    mode: "chat",
     settings: { ...DEFAULT_SETTINGS },
     messages: [],
     createdAt: now,
@@ -78,11 +91,25 @@ function compactHistory(messages: Message[], maxCharacters = 14_336) {
 
 type PendingSend = { conversationId: string; content: string; attachmentIds: string[]; preset?: PromptPreset };
 
+let activeAbortController: AbortController | null = null;
+let resolveAgentApproval: ((approved: boolean) => void) | null = null;
+
+function waitForAgentApproval() {
+  return new Promise<boolean>((resolve) => { resolveAgentApproval = resolve; });
+}
+
+function settleAgentApproval(approved: boolean) {
+  resolveAgentApproval?.(approved);
+  resolveAgentApproval = null;
+}
+
 export type ChatState = {
   hydrated: boolean;
   conversations: Conversation[];
   activeConversationId: string;
   attachments: LocalAttachment[];
+  artifacts: Artifact[];
+  activeArtifactId: string | null;
   customModels: CustomModelManifest[];
   preferences: Preferences;
   deviceProfile: DeviceProfile | null;
@@ -109,7 +136,11 @@ export type ChatState = {
   clearAllConversations: () => void;
   addAttachments: (attachments: LocalAttachment[]) => void;
   removeAttachment: (id: string) => void;
+  requestMode: (mode: ConversationMode) => void;
   sendMessage: (content: string, attachmentIds?: string[], preset?: PromptPreset) => void;
+  retryAgent: (messageId: string) => void;
+  openArtifact: (id: string) => void;
+  closeArtifact: () => void;
   cancelGeneration: () => void;
   requestModel: (modelId: string) => Promise<void>;
   prepareModel: (modelId?: string, pending?: PendingSend | null) => Promise<void>;
@@ -136,6 +167,7 @@ function persistSoon() {
       conversations: state.conversations,
       activeConversationId: state.activeConversationId,
       attachments: state.attachments,
+      artifacts: state.artifacts,
       customModels: state.customModels,
       preferences: state.preferences,
     });
@@ -157,11 +189,26 @@ function patchAssistant(
   });
 }
 
+function patchMessage(
+  conversations: Conversation[],
+  conversationId: string,
+  messageId: string,
+  updater: (message: Message) => Message,
+) {
+  return conversations.map((conversation) => conversation.id === conversationId ? {
+    ...conversation,
+    messages: conversation.messages.map((message) => message.id === messageId ? updater(message) : message),
+    updatedAt: Date.now(),
+  } : conversation);
+}
+
 export const useChatStore = create<ChatState>((set, get) => ({
   hydrated: false,
   conversations: [initialConversation],
   activeConversationId: initialConversation.id,
   attachments: [],
+  artifacts: [],
+  activeArtifactId: null,
   customModels: [],
   preferences: {
     language: navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en",
@@ -198,6 +245,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       conversations,
       activeConversationId,
       attachments: snapshot.attachments ?? [],
+      artifacts: snapshot.artifacts ?? [],
       customModels,
       preferences,
       hydrated: true,
@@ -250,6 +298,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       return {
         conversations,
         attachments: state.attachments.filter((attachment) => attachment.conversationId !== id),
+        artifacts: state.artifacts.filter((artifact) => artifact.conversationId !== id),
+        activeArtifactId: state.artifacts.some((artifact) => artifact.id === state.activeArtifactId && artifact.conversationId === id) ? null : state.activeArtifactId,
         activeConversationId: state.activeConversationId === id ? conversations[0].id : state.activeConversationId,
       };
     });
@@ -272,6 +322,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         conversation.id === id ? { ...conversation, messages: [], updatedAt: Date.now() } : conversation,
       ),
       attachments: state.attachments.filter((attachment) => attachment.conversationId !== id),
+      artifacts: state.artifacts.filter((artifact) => artifact.conversationId !== id),
+      activeArtifactId: state.artifacts.some((artifact) => artifact.id === state.activeArtifactId && artifact.conversationId === id) ? null : state.activeArtifactId,
     }));
     persistSoon();
   },
@@ -283,6 +335,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       conversations: [conversation],
       activeConversationId: conversation.id,
       attachments: [],
+      artifacts: [],
+      activeArtifactId: null,
       runtimePhase: "idle",
       modelPhase: "idle",
       activeModelId: null,
@@ -301,12 +355,43 @@ export const useChatStore = create<ChatState>((set, get) => ({
     persistSoon();
   },
 
+  requestMode(mode) {
+    const conversation = getActiveConversation(get());
+    if (!conversation || conversation.mode === mode || get().isGenerating) return;
+    if (mode === "chat") {
+      set((state) => ({ conversations: state.conversations.map((item) => item.id === conversation.id
+        ? { ...item, mode: "chat", updatedAt: Date.now() }
+        : item) }));
+      persistSoon();
+      return;
+    }
+    const model = getModel(conversation.modelId, get().customModels, get().deviceProfile);
+    if (model?.capabilities.includes("tools")) {
+      set((state) => ({ conversations: state.conversations.map((item) => item.id === conversation.id
+        ? { ...item, mode: "agent", updatedAt: Date.now() }
+        : item) }));
+      persistSoon();
+      return;
+    }
+    set({ approval: { kind: "agent-mode", modelId: AGENT_MODEL_ID }, runtimePhase: "awaiting-approval", modelPhase: "awaiting-approval" });
+  },
+
   sendMessage(content, attachmentIds = [], preset) {
     const prompt = content.trim();
     if (!prompt || get().isGenerating) return;
     const conversation = getActiveConversation(get());
     if (!conversation) return;
     const pending: PendingSend = { conversationId: conversation.id, content: prompt, attachmentIds, preset };
+    const model = getModel(conversation.modelId, get().customModels, get().deviceProfile);
+    if (conversation.mode === "agent" && !model?.capabilities.includes("tools")) {
+      set({
+        approval: { kind: "agent-mode", modelId: AGENT_MODEL_ID },
+        pendingSend: pending,
+        runtimePhase: "awaiting-approval",
+        modelPhase: "awaiting-approval",
+      });
+      return;
+    }
     if (!engineManager.isReady(conversation.modelId)) {
       set({
         approval: { kind: "load-model", modelId: conversation.modelId, prompt, attachmentIds },
@@ -319,16 +404,42 @@ export const useChatStore = create<ChatState>((set, get) => ({
     void sendNow(pending);
   },
 
+  retryAgent(messageId) {
+    const conversation = getActiveConversation(get());
+    const message = conversation?.messages.find((item) => item.id === messageId);
+    if (!message?.agentRun || get().isGenerating) return;
+    get().sendMessage(message.agentRun.input, message.attachmentIds);
+  },
+
+  openArtifact(id) {
+    if (get().artifacts.some((artifact) => artifact.id === id)) set({ activeArtifactId: id });
+  },
+
+  closeArtifact() {
+    set({ activeArtifactId: null });
+  },
+
   cancelGeneration() {
     const conversationId = get().generationConversationId;
     if (!conversationId) return;
+    activeAbortController?.abort();
+    activeAbortController = null;
+    if (get().approval?.kind === "agent-tool") settleAgentApproval(false);
     engineManager.interrupt();
     set((state) => ({
       conversations: patchAssistant(state.conversations, conversationId, (message) => ({
         ...message,
-        content: message.content || "Generation stopped.",
+        content: message.content || (message.agentRun ? "Agent run stopped." : "Generation stopped."),
         status: "stopped",
         isStreaming: false,
+        agentRun: message.agentRun ? {
+          ...message.agentRun,
+          status: "stopped",
+          completedAt: Date.now(),
+          steps: message.agentRun.steps.map((step) => step.status === "awaiting-approval"
+            ? { ...step, status: "declined", result: "Run stopped", completedAt: Date.now() }
+            : step),
+        } : undefined,
         updatedAt: Date.now(),
       })),
       isGenerating: false,
@@ -336,13 +447,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
       runtimePhase: "interrupted",
       modelPhase: "interrupted",
       modelMessage: "Generation stopped",
+      approval: null,
     }));
     persistSoon();
   },
 
   async requestModel(modelId) {
     const conversation = getActiveConversation(get());
-    if (!conversation || !getModel(modelId, get().customModels)) return;
+    if (!conversation || !getModel(modelId, get().customModels, get().deviceProfile)) return;
     if (get().isGenerating) {
       set({ approval: { kind: "load-model", modelId }, runtimePhase: "awaiting-approval", modelPhase: "awaiting-approval" });
       return;
@@ -358,11 +470,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   async prepareModel(modelId, pending = null) {
     const conversation = getActiveConversation(get());
     const target = modelId ?? conversation?.modelId ?? get().recommendedModelId;
-    if (!getModel(target, get().customModels)) return;
+    const targetModel = getModel(target, get().customModels, get().deviceProfile);
+    if (!targetModel) return;
     if (get().isGenerating) get().cancelGeneration();
     set((state) => ({
       conversations: state.conversations.map((item) => item.id === state.activeConversationId
-        ? { ...item, modelId: target, updatedAt: Date.now() }
+        ? { ...item, modelId: target, mode: item.mode === "agent" && !targetModel.capabilities.includes("tools") ? "chat" : item.mode, updatedAt: Date.now() }
         : item),
       runtimePhase: "loading",
       modelPhase: "loading",
@@ -420,6 +533,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
   async confirmApproval() {
     const approval = get().approval;
     if (!approval) return;
+    if (approval.kind === "agent-tool") {
+      set({ approval: null, runtimePhase: "generating", modelPhase: "generating", modelMessage: "Applying approved artifact" });
+      settleAgentApproval(true);
+      return;
+    }
     set({ approval: null });
     if (approval.kind === "custom-model") {
       const customModels = [...get().customModels, approval.manifest];
@@ -439,11 +557,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       return;
     }
+    if (approval.kind === "agent-mode") {
+      set((state) => ({ conversations: state.conversations.map((item) => item.id === state.activeConversationId
+        ? { ...item, mode: "agent", updatedAt: Date.now() }
+        : item) }));
+      persistSoon();
+      await get().prepareModel(approval.modelId, get().pendingSend);
+      return;
+    }
     if (get().isGenerating) get().cancelGeneration();
     await get().prepareModel(approval.modelId, get().pendingSend);
   },
 
   cancelApproval() {
+    if (get().approval?.kind === "agent-tool") {
+      set({ approval: null, runtimePhase: "generating", modelPhase: "generating", modelMessage: "Artifact change declined" });
+      settleAgentApproval(false);
+      return;
+    }
     set({ approval: null, pendingSend: null, runtimePhase: get().activeModelId ? "ready" : "idle", modelPhase: get().activeModelId ? "ready" : "idle" });
   },
 
@@ -480,6 +611,10 @@ async function sendNow(pending: PendingSend) {
   const state = useChatStore.getState();
   const conversation = state.conversations.find((item) => item.id === pending.conversationId);
   if (!conversation || state.isGenerating || !engineManager.isReady(conversation.modelId)) return;
+  if (conversation.mode === "agent") {
+    await runAgentNow(pending);
+    return;
+  }
   const attachments = state.attachments.filter((attachment) => pending.attachmentIds.includes(attachment.id));
   const presetText = pending.preset ? PROMPT_PRESETS[pending.preset] : "";
   const context = contextBlock(attachments);
@@ -497,6 +632,7 @@ async function sendNow(pending: PendingSend) {
   });
   const history = compactHistory([...conversation.messages, user]);
   const abortController = new AbortController();
+  activeAbortController = abortController;
 
   useChatStore.setState((current) => ({
     conversations: current.conversations.map((item) => item.id === conversation.id ? {
@@ -545,6 +681,7 @@ async function sendNow(pending: PendingSend) {
       modelPhase: "ready",
       modelMessage: `${getModel(conversation.modelId, latest.customModels)?.label ?? conversation.modelId} is ready`,
     }));
+    activeAbortController = null;
     persistSoon();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -566,6 +703,255 @@ async function sendNow(pending: PendingSend) {
         ? { kind: "fallback", modelId: FALLBACK_MODEL_ID }
         : null,
     }));
+    activeAbortController = null;
+    persistSoon();
+  }
+}
+
+async function runAgentNow(pending: PendingSend) {
+  const initial = useChatStore.getState();
+  const conversation = initial.conversations.find((item) => item.id === pending.conversationId);
+  if (!conversation || initial.isGenerating || !engineManager.isReady(conversation.modelId)) return;
+  const model = getModel(conversation.modelId, initial.customModels, initial.deviceProfile);
+  if (!model?.capabilities.includes("tools")) throw new Error("The selected model does not support Agent mode.");
+
+  const selectedAttachments = initial.attachments.filter((attachment) => pending.attachmentIds.includes(attachment.id));
+  let runArtifacts = initial.artifacts.filter((artifact) => artifact.conversationId === conversation.id);
+  const presetText = pending.preset ? PROMPT_PRESETS[pending.preset] : "";
+  const user = createMessage("user", pending.content, {
+    runtimeContent: [presetText, pending.content].filter(Boolean).join("\n\n"),
+    attachmentIds: pending.attachmentIds,
+    modelId: conversation.modelId,
+    status: "complete",
+  });
+  const run: AgentRun = {
+    id: createId(),
+    input: pending.content,
+    status: "planning",
+    steps: [],
+    maxSteps: 8,
+    startedAt: Date.now(),
+  };
+  const assistant = createMessage("assistant", "", {
+    attachmentIds: pending.attachmentIds,
+    modelId: conversation.modelId,
+    status: "streaming",
+    isStreaming: true,
+    agentRun: run,
+  });
+  const compacted = compactHistory([...conversation.messages, user]);
+  const artifactSummary = runArtifacts.length
+    ? `Saved artifacts: ${runArtifacts.map((artifact) => `${artifact.title} (${artifact.id}, ${artifact.kind})`).join(", ")}`
+    : "Saved artifacts: none.";
+  const protocol: ChatCompletionMessageParam[] = [
+    { role: "system", content: `${AGENT_SYSTEM_PROMPT}\n\n${conversation.settings.systemPrompt}\n\n${artifactSummary}` },
+    ...compacted.messages
+      .filter((message) => message.role !== "system" && !message.isError && (message.runtimeContent ?? message.content).trim())
+      .map((message) => ({ role: message.role as "assistant" | "user", content: message.runtimeContent ?? message.content })),
+  ];
+  const abortController = new AbortController();
+  activeAbortController = abortController;
+
+  const patchRun = (updater: (current: AgentRun) => AgentRun) => useChatStore.setState((state) => ({
+    conversations: patchMessage(state.conversations, conversation.id, assistant.id, (message) => ({
+      ...message,
+      agentRun: message.agentRun ? updater(message.agentRun) : message.agentRun,
+      updatedAt: Date.now(),
+    })),
+  }));
+
+  const patchStep = (stepId: string, fields: Partial<AgentRun["steps"][number]>) => patchRun((current) => ({
+    ...current,
+    steps: current.steps.map((step) => step.id === stepId ? { ...step, ...fields } : step),
+  }));
+
+  useChatStore.setState((state) => ({
+    conversations: state.conversations.map((item) => item.id === conversation.id ? {
+      ...item,
+      title: item.messages.length === 0 ? titleFromPrompt(pending.content) : item.title,
+      messages: [...item.messages, user, assistant],
+      updatedAt: Date.now(),
+    } : item),
+    isGenerating: true,
+    generationConversationId: conversation.id,
+    runtimePhase: "generating",
+    modelPhase: "generating",
+    modelMessage: "Planning local agent run",
+    contextNotice: compacted.omitted ? "Earlier messages omitted to fit the 4K context." : null,
+  }));
+
+  let completedSteps = 0;
+  let totalElapsedMs = 0;
+  let lastStats = "";
+
+  try {
+    for (let round = 0; round < run.maxSteps; round += 1) {
+      if (abortController.signal.aborted || useChatStore.getState().generationConversationId !== conversation.id) return;
+      patchRun((current) => ({ ...current, status: current.steps.length ? "running" : "planning" }));
+      const completion = await engineManager.agentStep(
+        protocol,
+        conversation.settings,
+        AGENT_TOOLS,
+        () => undefined,
+        abortController.signal,
+      );
+      totalElapsedMs += completion.elapsedMs;
+      lastStats = completion.statsText;
+      if (abortController.signal.aborted || useChatStore.getState().generationConversationId !== conversation.id) return;
+
+      if (!completion.toolCalls.length) {
+        const content = completion.content.trim() || "Agent run completed.";
+        useChatStore.setState((state) => ({
+          conversations: patchMessage(state.conversations, conversation.id, assistant.id, (message) => ({
+            ...message,
+            content,
+            status: "complete",
+            isStreaming: false,
+            stats: { text: lastStats, elapsedMs: totalElapsedMs },
+            agentRun: message.agentRun ? { ...message.agentRun, status: "complete", completedAt: Date.now() } : message.agentRun,
+            updatedAt: Date.now(),
+          })),
+          isGenerating: false,
+          generationConversationId: null,
+          runtimePhase: "ready",
+          modelPhase: "ready",
+          modelMessage: `${model.label} is ready`,
+        }));
+        activeAbortController = null;
+        persistSoon();
+        return;
+      }
+
+      protocol.push({ role: "assistant", content: completion.content || null, tool_calls: completion.toolCalls });
+      for (const toolCall of completion.toolCalls) {
+        if (completedSteps >= run.maxSteps) break;
+        completedSteps += 1;
+        const stepId = createId();
+        let args: Record<string, unknown> = {};
+        try {
+          args = parseToolArguments(toolCall.function.arguments);
+        } catch (error) {
+          const result = `Tool arguments failed validation: ${error instanceof Error ? error.message : String(error)}`;
+          patchRun((current) => ({ ...current, status: "running", steps: [...current.steps, {
+            id: stepId,
+            sequence: completedSteps,
+            toolCallId: toolCall.id,
+            toolName: toolCall.function.name,
+            arguments: {},
+            status: "error",
+            result,
+            startedAt: Date.now(),
+            completedAt: Date.now(),
+          }] }));
+          protocol.push({ role: "tool", tool_call_id: toolCall.id, content: result });
+          continue;
+        }
+
+        patchRun((current) => ({ ...current, status: "running", steps: [...current.steps, {
+          id: stepId,
+          sequence: completedSteps,
+          toolCallId: toolCall.id,
+          toolName: toolCall.function.name,
+          arguments: args,
+          status: "running",
+          startedAt: Date.now(),
+        }] }));
+        useChatStore.setState({ modelMessage: `Running ${toolCall.function.name}` });
+
+        let toolOutput = "";
+        try {
+          const execution = executeAgentTool(toolCall.function.name, args, {
+            conversationId: conversation.id,
+            attachments: selectedAttachments,
+            artifacts: runArtifacts,
+            createId,
+            now: Date.now,
+          });
+          if (execution.proposal) {
+            patchStep(stepId, { status: "awaiting-approval" });
+            patchRun((current) => ({ ...current, status: "awaiting-approval" }));
+            useChatStore.setState({
+              approval: { kind: "agent-tool", conversationId: conversation.id, messageId: assistant.id, stepId, proposal: execution.proposal },
+              runtimePhase: "awaiting-approval",
+              modelPhase: "awaiting-approval",
+              modelMessage: "Artifact change needs approval",
+            });
+            const approved = await waitForAgentApproval();
+            if (abortController.signal.aborted || useChatStore.getState().generationConversationId !== conversation.id) return;
+            if (approved) {
+              const committed = commitArtifactProposal(execution.proposal);
+              runArtifacts = execution.proposal.operation === "create"
+                ? [...runArtifacts, committed.artifact]
+                : runArtifacts.map((artifact) => artifact.id === committed.artifact.id ? committed.artifact : artifact);
+              useChatStore.setState((state) => ({
+                artifacts: execution.proposal!.operation === "create"
+                  ? [...state.artifacts, committed.artifact]
+                  : state.artifacts.map((artifact) => artifact.id === committed.artifact.id ? committed.artifact : artifact),
+                runtimePhase: "generating",
+                modelPhase: "generating",
+                modelMessage: "Continuing agent run",
+              }));
+              persistSoon();
+              toolOutput = committed.output;
+              patchStep(stepId, { status: "complete", result: toolOutput, artifactId: committed.artifact.id, completedAt: Date.now() });
+            } else {
+              toolOutput = "User declined the artifact change.";
+              patchStep(stepId, { status: "declined", result: toolOutput, completedAt: Date.now() });
+            }
+          } else {
+            toolOutput = execution.output ?? "Tool completed.";
+            patchStep(stepId, { status: "complete", result: toolOutput, completedAt: Date.now() });
+          }
+        } catch (error) {
+          toolOutput = `Tool error: ${error instanceof Error ? error.message : String(error)}`;
+          patchStep(stepId, { status: "error", result: toolOutput, completedAt: Date.now() });
+        }
+        protocol.push({ role: "tool", tool_call_id: toolCall.id, content: toolOutput });
+      }
+
+      if (completedSteps >= run.maxSteps) {
+        const content = "Agent stopped after reaching the 8-step safety limit.";
+        useChatStore.setState((state) => ({
+          conversations: patchMessage(state.conversations, conversation.id, assistant.id, (message) => ({
+            ...message,
+            content,
+            status: "error",
+            isStreaming: false,
+            isError: true,
+            agentRun: message.agentRun ? { ...message.agentRun, status: "error", completedAt: Date.now() } : message.agentRun,
+            updatedAt: Date.now(),
+          })),
+          isGenerating: false,
+          generationConversationId: null,
+          runtimePhase: "error",
+          modelPhase: "error",
+          modelMessage: content,
+        }));
+        activeAbortController = null;
+        persistSoon();
+        return;
+      }
+    }
+  } catch (error) {
+    if (useChatStore.getState().generationConversationId !== conversation.id) return;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    useChatStore.setState((state) => ({
+      conversations: patchMessage(state.conversations, conversation.id, assistant.id, (message) => ({
+        ...message,
+        content: errorMessage,
+        status: "error",
+        isStreaming: false,
+        isError: true,
+        agentRun: message.agentRun ? { ...message.agentRun, status: "error", completedAt: Date.now() } : message.agentRun,
+        updatedAt: Date.now(),
+      })),
+      isGenerating: false,
+      generationConversationId: null,
+      runtimePhase: "error",
+      modelPhase: "error",
+      modelMessage: errorMessage,
+    }));
+    activeAbortController = null;
     persistSoon();
   }
 }

@@ -12,6 +12,7 @@ import {
   Trash2Icon,
 } from "@/components/icons";
 import { ProgressBar } from "@/components/ProgressBar";
+import { diffLines } from "@/features/agent/diff";
 import { getModel, modelSizeLabel } from "@/features/models/catalog";
 import { useChatStore } from "@/store/chat";
 import type { LocalAttachment, ModelDefinition } from "@/types/chat";
@@ -141,6 +142,8 @@ function approvalCopy(kind: NonNullable<ReturnType<typeof useChatStore.getState>
   if (kind === "delete-cache") return { title: "Delete model cache?", body: `${modelLabel} will need to be downloaded again.` };
   if (kind === "custom-model") return { title: "Trust this model source?", body: "The browser will download and execute the declared WebAssembly model library." };
   if (kind === "fallback") return { title: "Load the lighter model?", body: `${modelLabel} uses less GPU memory and keeps this conversation local.` };
+  if (kind === "agent-mode") return { title: "Enable Agent mode?", body: `${modelLabel} supports local tool calls and artifact workflows.` };
+  if (kind === "agent-tool") return { title: "Apply artifact change?", body: "Review the local diff before this artifact is saved." };
   return { title: "Download local model?", body: `${modelLabel} will be stored in this browser for later sessions.` };
 }
 
@@ -154,9 +157,11 @@ export function ApprovalModal() {
   const modelId = approval && "modelId" in approval ? approval.modelId : approval?.kind === "custom-model" ? approval.manifest.record.model_id : "";
   const model = getModel(modelId, customModels);
   const copy = approval ? approvalCopy(approval.kind, model?.label ?? modelId) : null;
+  const proposal = approval?.kind === "agent-tool" ? approval.proposal : null;
+  const diff = proposal ? diffLines(proposal.previousContent, proposal.artifact.content) : [];
   const localizedCopy = approval && i18n.language === "zh" ? {
-    title: approval.kind === "delete-cache" ? "删除模型缓存？" : approval.kind === "custom-model" ? "信任此模型来源？" : approval.kind === "fallback" ? "加载轻量模型？" : "下载本地模型？",
-    body: approval.kind === "delete-cache" ? `${model?.label ?? modelId} 下次使用时需要重新下载。` : approval.kind === "custom-model" ? "浏览器将下载并执行清单中声明的 WebAssembly 模型库。" : `${model?.label ?? modelId} 将在当前浏览器中本地运行。`,
+    title: approval.kind === "delete-cache" ? "删除模型缓存？" : approval.kind === "custom-model" ? "信任此模型来源？" : approval.kind === "fallback" ? "加载轻量模型？" : approval.kind === "agent-mode" ? "启用 Agent 模式？" : approval.kind === "agent-tool" ? "应用 Artifact 修改？" : "下载本地模型？",
+    body: approval.kind === "delete-cache" ? `${model?.label ?? modelId} 下次使用时需要重新下载。` : approval.kind === "custom-model" ? "浏览器将下载并执行清单中声明的 WebAssembly 模型库。" : approval.kind === "agent-tool" ? "确认 Diff 后，修改将保存在当前浏览器。" : `${model?.label ?? modelId} 将在当前浏览器中本地运行。`,
   } : copy;
 
   return (
@@ -166,7 +171,7 @@ export function ApprovalModal() {
           if (event.target === event.currentTarget) cancel();
         }}>
           <motion.section
-            className="approval-card bui-card"
+            className={`approval-card bui-card${proposal ? " is-artifact" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="approval-title"
@@ -175,16 +180,25 @@ export function ApprovalModal() {
             exit={{ opacity: 0, y: 6, scale: 0.99 }}
             transition={{ duration: reduced ? 0 : 0.2, ease: [0.23, 1, 0.32, 1] }}
           >
-            <div className="approval-icon">{approval.kind === "delete-cache" ? <AlertTriangle size={18} /> : <ShieldCheckIcon size={18} />}</div>
+            <div className="approval-icon">{approval.kind === "delete-cache" ? <AlertTriangle size={18} /> : proposal ? <FileTextIcon size={18} /> : <ShieldCheckIcon size={18} />}</div>
             <div><h2 id="approval-title">{localizedCopy.title}</h2><p>{localizedCopy.body}</p></div>
-            <dl>
-              <div><dt>Model</dt><dd>{model?.label ?? modelId}</dd></div>
-              {model ? <div><dt>Memory</dt><dd>{modelSizeLabel(model)}</dd></div> : null}
-              <div><dt>Runtime</dt><dd>WebLLM · WebGPU</dd></div>
-            </dl>
+            {proposal ? (
+              <div className="artifact-approval-body">
+                <div className="artifact-approval-summary"><span>{proposal.operation}</span><strong>{proposal.artifact.title}</strong><i>{proposal.artifact.kind}</i></div>
+                <div className="diff-table" role="table" aria-label="Artifact diff">
+                  {diff.map((row, index) => <div className={`diff-row is-${row.type}`} role="row" key={`${index}-${row.type}`}><span>{row.type === "add" ? "+" : row.type === "remove" ? "−" : ""}</span><code>{row.after ?? row.before ?? " "}</code></div>)}
+                </div>
+              </div>
+            ) : (
+              <dl>
+                <div><dt>Model</dt><dd>{model?.label ?? modelId}</dd></div>
+                {model ? <div><dt>Memory</dt><dd>{modelSizeLabel(model)}</dd></div> : null}
+                <div><dt>Runtime</dt><dd>WebLLM · WebGPU</dd></div>
+              </dl>
+            )}
             <footer>
               <button className="bui-secondary" type="button" onClick={cancel}>{t("common.cancel")}</button>
-              <button className="bui-primary" type="button" onClick={() => void confirm()}>{approval.kind === "delete-cache" ? t("models.deleteCache") : t("common.confirm")}</button>
+              <button className="bui-primary" type="button" onClick={() => void confirm()}>{approval.kind === "delete-cache" ? t("models.deleteCache") : proposal ? t("agent.apply") : t("common.confirm")}</button>
             </footer>
           </motion.section>
         </motion.div>

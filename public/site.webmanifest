@@ -1,7 +1,7 @@
 {
   "name": "ChatLLM",
   "short_name": "ChatLLM",
-  "description": "Private local model studio and AI chat powered by WebGPU.",
+  "description": "Private local model studio, AI chat, and agent workspace powered by WebGPU.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fafafb",

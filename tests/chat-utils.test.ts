@@ -10,6 +10,7 @@ function conversation(id: string, updatedAt: number): Conversation {
   return {
     id,
     title: id,
+    mode: "chat",
     modelId: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
     settings: {
       temperature: 0.7,

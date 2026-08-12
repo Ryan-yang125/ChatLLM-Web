@@ -2,7 +2,7 @@
 
 <p align="center"><img src="public/brand/chatllm-icon-192.png" width="80" height="80" alt="ChatLLM Web" /></p>
 <h1 align="center">ChatLLM Web</h1>
-<p align="center"><strong>由 WebGPU 驱动的隐私本地模型工作台与 AI 对话应用。</strong></p>
+<p align="center"><strong>由 WebGPU 驱动的隐私本地模型工作台、AI 对话与 Agent 工作区。</strong></p>
 <p align="center"><a href="./README.md">English</a> · <a href="./README.zh-CN.md"><strong>简体中文</strong></a></p>
 <p align="center">
   <a href="https://chatllm-web.pages.dev"><strong>打开 ChatLLM</strong></a> ·
@@ -13,13 +13,17 @@
 
 <!-- markdownlint-enable MD013 MD033 MD041 -->
 
-![ChatLLM Web v3.1](docs/assets/chatllm-v3-home.jpg)
+![ChatLLM Web v3.2 本地 Agent 工作区](docs/assets/chatllm-v3.2-agent.jpg)
 
-## 浏览器里的 Local Model Studio
+## 浏览器里的本地 AI 工作台
 
-ChatLLM Web v3.1 将专注的对话工作区与完整的本地模型管理结合在一起。应用会检测当前浏览器、推荐合适模型、确认大文件下载、通过独立 Worker 流式生成，并将对话和文件保存在设备上。
+ChatLLM Web v3.2 将 Chat、Local Agent Workspace 与 Local Model Studio 放进同一个浏览器本地产品。应用会检测当前浏览器、推荐合适模型、通过独立 Worker 运行 WebLLM，并将对话、所选文件、工具结果与 Artifact 保存在设备上。
 
-- 提供 18 个精选对话、编程、推理、视觉与工具模型。
+- 每个对话可独立切换 Chat 与 Agent 模式。
+- 使用 3 个 Hermes 模型运行 WebLLM 原生 Function Calling。
+- 通过沙箱本地工具读取与搜索所选文件、计算、读取与生成 Artifact。
+- 每次 Artifact 写入都先展示逐行 Diff，确认后才保存进 IndexedDB。
+- 提供 20 个精选对话、编程、推理、视觉与工具模型。
 - 高级目录开放 65 个逻辑模型，对应 WebLLM 官方 163 条运行记录。
 - 根据设备 features 自动选择兼容量化版本，每个逻辑模型在目录中只出现一次。
 - 查看 WebGPU、设备内存、浏览器存储、兼容性、缓存和运行状态。
@@ -52,7 +56,9 @@ ChatLLM Web v3.1 将专注的对话工作区与完整的本地模型管理结合
 | 实验 | Ministral 3 3B Reasoning | 2.8 GB | 轻量推理 |
 | 实验 | DeepSeek R1 Distill Qwen 7B | 5.0 GB | 长链路推理 |
 | 实验 | Phi 3.5 Vision | 3.9 GB | 视觉预览 |
-| 实验 | Hermes 2 Pro Mistral 7B | 3.9 GB | 本地工具调用 |
+| 实验 | Hermes 2 Pro Mistral 7B | 3.9 GB | 默认本地 Agent |
+| 实验 | Hermes 2 Pro Llama 3 8B | 4.9 GB | 多步工具调用 |
+| 实验 | Hermes 3 Llama 3.1 8B | 4.8 GB | 更高质量本地 Agent |
 
 所有精选模型使用 4K 上下文。浏览器支持 WebGPU 且报告至少 8 GB 设备内存时，ChatLLM 推荐 Qwen 3.5 2B；设备信息未知或内存较低时推荐 Llama 3.2 1B。WebGPU features、buffer limits 与声明的显存需求共同决定兼容和高内存状态。
 
@@ -71,6 +77,23 @@ ChatLLM Web v3.1 将专注的对话工作区与完整的本地模型管理结合
 
 ![ChatLLM Web 深色模式](docs/assets/chatllm-v3-dark.jpg)
 
+## Local Agent Workspace
+
+在 Prompt Bar 选择 **Agent** 即可开始本地工具调用。每个对话独立保存模式与模型；当前模型缺少原生 Function Calling 时，ChatLLM 会请求加载 Hermes 2 Pro Mistral 7B。
+
+| 本地工具 | 访问范围 | 确认方式 |
+| --- | --- | --- |
+| 列出与读取所选上下文文件 | 当前任务所选文件 | 自动执行 |
+| 搜索所选上下文文件 | 当前任务所选文件 | 自动执行 |
+| 算术计算 | 沙箱解析器 | 自动执行 |
+| 列出与读取对话 Artifact | 当前对话 | 自动执行 |
+| 创建 Artifact | 当前对话 | Diff 确认 |
+| 更新 Artifact | 当前对话 | Diff 确认 |
+
+Agent Run Rail 会记录规划、工具调用、确认、完成、停止与错误。每次执行最多 8 步；停止会保留已经完成的步骤，Retry 会基于原任务创建一次全新执行。确认后的 Markdown、代码、JSON 与文本 Artifact 保存在 IndexedDB，可在 Artifact 面板查看、复制与下载。单个 Artifact 限制为 64 KB 与 2,000 行，审批 Diff 会展示完整修改。
+
+Agent 工具只接收用户为当前任务选择的文件。v3.2 的运行边界不包含 Shell、直接磁盘写入、联网搜索、MCP Server、RAG 与第三方数据源。
+
 ## Local Model Studio
 
 访问 `/models` 管理本地运行时：
@@ -82,7 +105,7 @@ ChatLLM Web v3.1 将专注的对话工作区与完整的本地模型管理结合
 - 缓存、兼容、下载、加载、活动和错误状态。
 - 模型下载、外部 WASM、删除缓存和低内存降级确认。
 
-![ChatLLM Web v3.1 模型目录](docs/assets/chatllm-v3.1-models.jpg)
+![ChatLLM Web v3.2 模型目录](docs/assets/chatllm-v3.2-models.jpg)
 
 <p align="center"><img src="docs/assets/chatllm-v3-mobile.jpg" width="390" alt="ChatLLM Web 移动端界面" /></p>
 
@@ -123,8 +146,13 @@ URL 必须使用 HTTPS，并符合 Hugging Face、HF/XetHub 或 GitHub Raw 的 C
 ```mermaid
 flowchart LR
   UI[Beautiful UI 组件层] --> Chat[Chat Workspace]
+  UI --> Agent[Local Agent Workspace]
   UI --> Studio[Local Model Studio]
   Chat --> Store[Zustand 产品状态]
+  Agent --> Store
+  Agent --> Tools[沙箱本地工具]
+  Tools --> Approval[Artifact Diff 确认]
+  Approval --> IDB
   Studio --> Store
   Store --> Engine[WebLLM Engine Manager]
   Engine --> Worker[独立 Web Worker]
@@ -135,13 +163,15 @@ flowchart LR
 
 | 数据 | 存储 | 边界 |
 | --- | --- | --- |
-| 对话与消息 | IndexedDB | 当前浏览器 |
-| 文件文本与偏好 | IndexedDB | 当前浏览器 |
+| 对话、消息与 Agent 执行 | IndexedDB | 当前浏览器 |
+| 文件文本、Artifact 与偏好 | IndexedDB | 当前浏览器 |
 | 模型权重与 WASM | WebLLM Cache API | 当前浏览器 |
 | 应用壳 | Service Worker cache | 当前浏览器 |
 | 生成 | 独立 Worker + WebGPU | 当前设备 |
 
 Engine Manager 统一管理一个 Worker 和一个活动模型。request、conversation 与 model identity 会阻止过期事件覆盖新状态。OOM 与 GPU device lost 会释放 Worker，并提供轻量模型选择。
+
+v3.2 使用全新的 `chatllm-v3.2` IndexedDB schema。旧版本本地对话数据保持原状，新版本不会加载这些数据。
 
 ## 早期手写推理层
 

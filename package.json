@@ -1,7 +1,7 @@
 {
   "name": "chatllm-web",
-  "version": "3.1.0",
-  "description": "A private local model studio and browser-native AI chat powered by WebGPU.",
+  "version": "3.2.0",
+  "description": "A private local model studio, AI chat, and agent workspace powered by WebGPU.",
   "license": "MIT",
   "repository": {
     "type": "git",
