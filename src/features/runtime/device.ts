@@ -62,6 +62,14 @@ export function isModelCompatible(model: ModelDefinition, profile: DeviceProfile
   return true;
 }
 
+export function modelFit(model: ModelDefinition, profile: DeviceProfile | null) {
+  if (!isModelCompatible(model, profile)) return "incompatible" as const;
+  if (profile?.deviceMemoryGB && model.vramRequiredMB > profile.deviceMemoryGB * 1024 * 0.72) {
+    return "high-memory" as const;
+  }
+  return "compatible" as const;
+}
+
 export function recommendModelId(profile: DeviceProfile | null) {
   if (!profile?.webGPU) return FALLBACK_MODEL_ID;
   return profile.deviceMemoryGB !== null && profile.deviceMemoryGB >= 8

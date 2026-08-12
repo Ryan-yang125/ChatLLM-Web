@@ -100,7 +100,7 @@ export type ChatState = {
   pendingSend: PendingSend | null;
   hydrate: () => Promise<void>;
   inspectDevice: () => Promise<void>;
-  refreshCacheStatus: () => Promise<void>;
+  refreshCacheStatus: (modelIds?: string[]) => Promise<void>;
   createConversation: () => void;
   selectConversation: (id: string) => void;
   deleteConversation: (id: string) => void;
@@ -219,13 +219,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
-  async refreshCacheStatus() {
-    const models = allModels(get().customModels);
+  async refreshCacheStatus(modelIds) {
+    const models = modelIds?.length
+      ? modelIds.map((modelId) => getModel(modelId, get().customModels, get().deviceProfile)).filter((model) => model !== undefined)
+      : allModels(get().customModels, { profile: get().deviceProfile });
     const entries = await Promise.all(models.map(async (model) => [
       model.id,
       await engineManager.isCached(model.id).catch(() => false) ? "cached" : "available",
     ] as const));
-    set({ cacheByModel: Object.fromEntries(entries) });
+    set((state) => ({ cacheByModel: { ...state.cacheByModel, ...Object.fromEntries(entries) } }));
   },
 
   createConversation() {
