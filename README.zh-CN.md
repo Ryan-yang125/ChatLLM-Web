@@ -200,6 +200,9 @@ npx wrangler pages deploy dist --project-name chatllm-web --branch main
 
 生产地址：[chatllm-web.pages.dev](https://chatllm-web.pages.dev)
 
+## 🌟 历史
+[![Star History Chart](https://star-history.dera.page/svg?repos=Ryan-yang125/ChatLLM-Web&type=Date)](https://star-history.dera.page/#Ryan-yang125/ChatLLM-Web&Date)
+
 ## 致谢
 
 - 应用代码：[MIT](./LICENSE)
