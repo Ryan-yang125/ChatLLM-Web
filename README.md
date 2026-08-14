@@ -229,6 +229,9 @@ Production: [chatllm-web.pages.dev](https://chatllm-web.pages.dev)
 
 Cloudflare headers restrict framing, permissions, scripts, workers, WASM execution, and model connections. The PWA caches the application shell; WebLLM manages model assets separately.
 
+## 🌟 History
+[![Star History Chart](https://star-history.dera.page/svg?repos=Ryan-yang125/ChatLLM-Web&type=Date)](https://star-history.dera.page/#Ryan-yang125/ChatLLM-Web&Date)
+
 ## Credits
 
 - Application code: [MIT](./LICENSE)
